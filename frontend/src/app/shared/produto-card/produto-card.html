@@ -1,0 +1,40 @@
+<article class="card" [class.esgotado]="esgotado()">
+  <div class="img">
+    <img [src]="imagem()" [alt]="produto().nome" loading="lazy" />
+    <div class="selos">
+      @if (produto().restritoMaiorIdade) {
+        <span class="selo idade" title="Venda proibida para menores de 18 anos">+18</span>
+      }
+      @if (produto().ofertaEspecial) {
+        <span class="selo oferta">
+          Oferta especial
+          @if (produto().limiteDiarioOferta) {
+            · máx {{ produto().limiteDiarioOferta }}/dia
+          }
+        </span>
+      }
+      @if (esgotado()) {
+        <span class="selo fora">Esgotado</span>
+      }
+    </div>
+  </div>
+
+  <div class="corpo">
+    <span class="categoria caps">{{ produto().categoria.nome }}</span>
+    <h3>{{ produto().nome }}</h3>
+    @if (produto().descricao) {
+      <p class="descricao">{{ produto().descricao }}</p>
+    }
+
+    <div class="rodape">
+      <strong class="preco">{{ produto().preco | currency: 'BRL' }}</strong>
+      @if (esgotado()) {
+        <button type="button" class="btn btn-outline" disabled>Indisponível</button>
+      } @else {
+        <a class="btn btn-primary" [href]="linkPedido()" target="_blank" rel="noopener">
+          Pedir <i class="bi bi-whatsapp"></i>
+        </a>
+      }
+    </div>
+  </div>
+</article>

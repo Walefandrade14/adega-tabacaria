@@ -1,0 +1,35 @@
+<section class="loja" aria-labelledby="loja-titulo">
+  <div class="foto">
+    <img src="img/loja.jpg" alt="Interior da loja LouD Feliz no Simples com prateleiras de bebidas" loading="lazy" />
+  </div>
+
+  <div class="info">
+    <span class="eyebrow">Nossa loja</span>
+
+    <div class="linha endereco">
+      <i class="bi bi-geo-alt-fill icone"></i>
+      <h2 id="loja-titulo" class="gothic">{{ loja.endereco }}</h2>
+    </div>
+
+    <div class="linha horario">
+      <i class="bi bi-clock icone"></i>
+      <p>{{ loja.horario }}</p>
+    </div>
+
+    <p class="recado caps">Sempre pronto para te receber!</p>
+
+    <a class="btn btn-whats" [href]="whatsapp" target="_blank" rel="noopener">
+      <span class="wa"><i class="bi bi-whatsapp"></i> Fale conosco pelo WhatsApp</span>
+      <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <p class="extras">
+      <i class="bi bi-whatsapp"></i>
+      <span>Tire suas dúvidas</span>
+      <span class="dot">•</span>
+      <span>Faça seu pedido</span>
+      <span class="dot">•</span>
+      <span>Venha nos visitar</span>
+    </p>
+  </div>
+</section>

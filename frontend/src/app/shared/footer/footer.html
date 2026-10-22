@@ -1,0 +1,25 @@
+<footer class="footer">
+  <div class="container top">
+    <div class="brand">
+      <app-logo tamanho="sm" />
+      <p class="tagline caps">Tradição, sabor<br />e boa companhia.</p>
+    </div>
+
+    <nav class="links" aria-label="Rodapé">
+      <a routerLink="/">Início</a>
+      <a routerLink="/produtos">Produtos</a>
+      <a routerLink="/sobre">Sobre</a>
+      <a routerLink="/contato">Contato</a>
+    </nav>
+
+    <div class="social">
+      <a [href]="loja.instagram" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+      <a [href]="whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+      <a [href]="loja.mapa" target="_blank" rel="noopener" aria-label="Localização"><i class="bi bi-geo-alt-fill"></i></a>
+    </div>
+  </div>
+
+  <div class="container">
+    <p class="copy">© {{ ano }} {{ loja.nome }}. Todos os direitos reservados.</p>
+  </div>
+</footer>

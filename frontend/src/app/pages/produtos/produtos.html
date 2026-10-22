@@ -1,0 +1,73 @@
+<section class="topo">
+  <div class="container">
+    <span class="eyebrow ruled">Catálogo</span>
+    <h1 class="gothic">Nossos produtos</h1>
+    <p class="caps">Bebidas, tabacaria, narguilé e acessórios</p>
+  </div>
+</section>
+
+<section class="container conteudo">
+  <div class="filtros">
+    <nav class="chips" aria-label="Categorias">
+      <a
+        routerLink="/produtos"
+        [queryParams]="{ categoria: null }"
+        class="chip"
+        [class.ativo]="selecionada() === 'todas'">
+        Todas
+      </a>
+      @for (cat of categorias; track cat.slug) {
+        <a
+          routerLink="/produtos"
+          [queryParams]="{ categoria: cat.slug }"
+          class="chip"
+          [class.ativo]="selecionada() === cat.slug">
+          {{ cat.titulo }}
+        </a>
+      }
+    </nav>
+
+    <label class="busca">
+      <i class="bi bi-search"></i>
+      <span class="sr-only">Buscar produto</span>
+      <input type="search" placeholder="Buscar produto..." [value]="busca()" (input)="atualizarBusca($event)" />
+    </label>
+  </div>
+
+  @if (origem() === 'exemplo' && !carregando()) {
+    <p class="aviso">
+      <i class="bi bi-info-circle"></i>
+      API indisponível em <code>{{ apiUrl }}</code> — exibindo dados de exemplo.
+    </p>
+  }
+
+  @if (carregando()) {
+    @if (acordando()) {
+      <p class="aviso">
+        <i class="bi bi-hourglass-split"></i>
+        Acordando o servidor… no plano gratuito a primeira visita pode levar até 1 minuto.
+      </p>
+    }
+    <div class="grid">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+        <div class="skeleton"></div>
+      }
+    </div>
+  } @else if (erro()) {
+    <div class="vazio">
+      <p>Não foi possível carregar os produtos.</p>
+      <button type="button" class="btn btn-outline" (click)="carregar()">Tentar novamente</button>
+    </div>
+  } @else {
+    <p class="contagem">{{ filtrados().length }} {{ filtrados().length === 1 ? 'produto' : 'produtos' }}</p>
+    <div class="grid">
+      @for (p of filtrados(); track p.id) {
+        <app-produto-card [produto]="p" />
+      } @empty {
+        <div class="vazio">
+          <p>Nenhum produto encontrado.</p>
+        </div>
+      }
+    </div>
+  }
+</section>

@@ -1,10 +1,85 @@
 name: CI
+
 on:
   push:
-    branches: [backend]
+    branches: [main, backend]
+  pull_request:
+
 jobs:
-  probe:
-    runs-on: ubuntu-latest
+  backend:
+    name: Backend (Spring Boot + MySQL)
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    defaults:
+      run:
+        working-directory: backend
     steps:
-      - run: java -version && mvn -v && docker --version
-      - run: echo "::error title=probe::linha1%0Alinha2"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Testes
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/adega_tabacaria_test?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+        run: |
+          set -o pipefail
+          ./mvnw -B -ntp verify 2>&1 | tee build.log
+      - name: Erros do build
+        if: failure()
+        run: python3 ../.github/scripts/anotar_erros.py build.log target/surefire-reports
+      - name: Imagem Docker
+        run: docker build -t loud-feliz-api .
+      - name: Smoke test da imagem
+        run: |
+          docker run -d --name api --network host \
+            -e DATABASE_URL="mysql://root:root@127.0.0.1:3306/qualquer" \
+            -e DB_NAME=adega_smoke -e ADMIN_PASSWORD=smoke123 -e JWT_SECRET=segredo-de-ci \
+            loud-feliz-api
+          for i in $(seq 1 60); do curl -fs http://localhost:8080/actuator/health && break; sleep 3; done
+          curl -fs http://localhost:8080/api/produtos | python3 -c "import json,sys; d=json.load(sys.stdin); assert len(d) >= 10, d; print(len(d), 'produtos')"
+          TOKEN=$(curl -fs -X POST http://localhost:8080/api/auth/funcionarios/login -H 'Content-Type: application/json' \
+            -d '{"usuario":"dono","senha":"smoke123"}' | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])")
+          curl -fs http://localhost:8080/api/admin/pedidos -H "Authorization: Bearer $TOKEN"
+          curl -fs http://localhost:8080/v3/api-docs > /dev/null
+          curl -fs -o /dev/null http://localhost:8080/swagger-ui/index.html
+          curl -fs -H "Origin: https://loud-feliz-web.onrender.com" -I http://localhost:8080/api/produtos | grep -i "access-control-allow-origin" || true
+          docker stats --no-stream api
+      - name: Logs do container
+        if: failure()
+        run: docker logs api 2>&1 | python3 ../.github/scripts/anotar_erros.py -
+
+  frontend:
+    name: Frontend (Angular 19)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - name: Build de produção
+        run: |
+          set -o pipefail
+          API_URL=https://loud-feliz-api.onrender.com/api node scripts/definir-api.mjs
+          npm run build 2>&1 | tee build.log
+      - name: Erros do build
+        if: failure()
+        run: python3 ../.github/scripts/anotar_erros.py - < build.log

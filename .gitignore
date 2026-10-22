@@ -1,0 +1,11 @@
+backend/target/
+backend/*.log
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

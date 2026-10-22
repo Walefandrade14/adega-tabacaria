@@ -1,0 +1,68 @@
+<section class="topo">
+  <div class="container">
+    <span class="eyebrow ruled">Contato</span>
+    <h1 class="gothic">Fale com a gente</h1>
+    <p class="caps">Pedidos, dúvidas e sugestões</p>
+  </div>
+</section>
+
+<section class="container corpo">
+  <form class="form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <label class="campo">
+      <span>Nome</span>
+      <input type="text" formControlName="nome" autocomplete="name" [class.erro]="invalido('nome')" />
+      @if (invalido('nome')) {
+        <small>Informe seu nome.</small>
+      }
+    </label>
+
+    <label class="campo">
+      <span>Assunto</span>
+      <select formControlName="assunto">
+        @for (a of assuntos; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="campo">
+      <span>Mensagem</span>
+      <textarea rows="6" formControlName="mensagem" [class.erro]="invalido('mensagem')"></textarea>
+      @if (invalido('mensagem')) {
+        <small>Escreva pelo menos 10 caracteres.</small>
+      }
+    </label>
+
+    <button type="submit" class="btn btn-primary">
+      Enviar pelo WhatsApp <i class="bi bi-whatsapp"></i>
+    </button>
+  </form>
+
+  <aside class="infos">
+    <div class="info">
+      <i class="bi bi-geo-alt-fill"></i>
+      <div>
+        <span class="caps">Endereço</span>
+        <p class="gothic destaque">{{ loja.endereco }}</p>
+        <a [href]="loja.mapa" target="_blank" rel="noopener">Ver no mapa <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+
+    <div class="info">
+      <i class="bi bi-clock"></i>
+      <div>
+        <span class="caps">Horário</span>
+        <p>{{ loja.horario }}</p>
+      </div>
+    </div>
+
+    <a class="btn btn-whats" [href]="whatsapp" target="_blank" rel="noopener">
+      <span class="wa"><i class="bi bi-whatsapp"></i> Fale conosco pelo WhatsApp</span>
+      <i class="bi bi-arrow-right"></i>
+    </a>
+
+    <a class="btn btn-outline" [href]="loja.instagram" target="_blank" rel="noopener">
+      <i class="bi bi-instagram"></i> Siga no Instagram
+    </a>
+  </aside>
+</section>
