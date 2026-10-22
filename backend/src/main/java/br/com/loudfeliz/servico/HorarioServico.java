@@ -59,7 +59,7 @@ public class HorarioServico {
         });
         horario.setHoraAbertura(requisicao.horaAbertura());
         horario.setHoraFechamento(requisicao.horaFechamento());
-        horario.setAceitaDelivery(requisicao.aceitaDelivery());
+        horario.setAceitaDelivery(requisicao.aceitaDelivery() == null || requisicao.aceitaDelivery());
         return HorarioResponse.de(horarios.save(horario));
     }
 

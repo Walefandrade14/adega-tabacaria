@@ -81,7 +81,7 @@ public class PagamentoServico {
             case PIX -> pedido.setStatus(StatusPedido.AGUARDANDO_PAGAMENTO);
             case DINHEIRO -> aprovar(pedido, pagamento);
             case CARTAO_CREDITO, CARTAO_DEBITO -> {
-                if (requisicao.simularRecusa()) {
+                if (Boolean.TRUE.equals(requisicao.simularRecusa())) {
                     pagamento.setStatus(StatusPagamento.RECUSADO);
                     pedido.setStatus(StatusPedido.ABERTO);
                 } else {

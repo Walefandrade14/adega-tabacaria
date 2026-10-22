@@ -10,6 +10,6 @@ public record VendaBalcaoRequest(
         String clienteCpf,
         @NotEmpty List<@Valid ItemRequest> itens,
         @NotNull FormaPagamento formaPagamento,
-        boolean documentoConferido,
-        boolean simularRecusa) {
+        Boolean documentoConferido,
+        Boolean simularRecusa) {
 }

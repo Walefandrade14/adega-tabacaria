@@ -15,8 +15,8 @@ public record ProdutoRequest(
         @NotNull @Min(0) Integer estoqueQuantidade,
         @NotNull Long categoriaId,
         Long fornecedorId,
-        boolean restritoMaiorIdade,
-        boolean ofertaEspecial,
+        Boolean restritoMaiorIdade,
+        Boolean ofertaEspecial,
         @Min(1) Integer limiteDiarioOferta,
         Boolean ativo,
         @Size(max = 255) String imagemUrl) {

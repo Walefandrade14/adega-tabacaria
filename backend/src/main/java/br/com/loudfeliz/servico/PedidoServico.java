@@ -164,7 +164,7 @@ public class PedidoServico {
     @Transactional(readOnly = true)
     public CalculoResponse verificarBalcao(VerificacaoBalcaoRequest requisicao) {
         return calculadora.calcular(clientePorCpf(requisicao.clienteCpf()), CalculadoraCarrinho.agrupar(requisicao.itens()),
-                TipoEntrega.BALCAO, null, requisicao.documentoConferido()).paraResposta();
+                TipoEntrega.BALCAO, null, Boolean.TRUE.equals(requisicao.documentoConferido())).paraResposta();
     }
 
     @Transactional
@@ -172,7 +172,7 @@ public class PedidoServico {
         Funcionario funcionario = funcionario(funcionarioId);
         Cliente cliente = clientePorCpf(requisicao.clienteCpf());
         Calculo calculo = calculadora.calcular(cliente, CalculadoraCarrinho.agrupar(requisicao.itens()), TipoEntrega.BALCAO, null,
-                requisicao.documentoConferido());
+                Boolean.TRUE.equals(requisicao.documentoConferido()));
         calculo.exigirSemProblemas();
         Pedido pedido = pedidos.save(montar(calculo, cliente, funcionario, TipoEntrega.BALCAO, null));
         pagamentoServico.pagar(pedido, new PagamentoRequest(requisicao.formaPagamento(), requisicao.simularRecusa()));
