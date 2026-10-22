@@ -1,0 +1,10 @@
+name: CI
+on:
+  push:
+    branches: [backend]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: java -version && mvn -v && docker --version
+      - run: echo "::error title=probe::linha1%0Alinha2"
