@@ -1,0 +1,109 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  transition: border-color 0.25s, transform 0.25s;
+}
+
+.card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+}
+
+.img {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+.img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.esgotado .img img {
+  filter: grayscale(0.85) brightness(0.6);
+}
+
+.selos {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.selo {
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.idade {
+  background: var(--red);
+  color: #fff;
+}
+
+.oferta {
+  background: var(--gold);
+  color: #1a1209;
+}
+
+.fora {
+  background: #2a2624;
+  color: var(--muted);
+  border: 1px solid #3c3734;
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px 18px 18px;
+}
+
+.categoria {
+  font-size: 10px;
+  color: var(--gold);
+}
+
+h3 {
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.descricao {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.preco {
+  font-size: 19px;
+  color: var(--text);
+}
+
+.rodape .btn {
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  gap: 8px;
+}

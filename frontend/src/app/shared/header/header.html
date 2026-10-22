@@ -1,0 +1,27 @@
+<header class="header">
+  <div class="container bar">
+    <app-logo />
+
+    <button
+      type="button"
+      class="toggle"
+      [attr.aria-expanded]="menuAberto()"
+      aria-controls="menu-principal"
+      (click)="alternarMenu()">
+      <i class="bi" [class.bi-list]="!menuAberto()" [class.bi-x-lg]="menuAberto()"></i>
+      <span class="sr-only">Menu</span>
+    </button>
+
+    <nav id="menu-principal" class="nav" [class.open]="menuAberto()" aria-label="Principal">
+      @for (link of links; track link.rota) {
+        <a
+          [routerLink]="link.rota"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: link.exato }"
+          (click)="fecharMenu()">
+          {{ link.rotulo }}
+        </a>
+      }
+    </nav>
+  </div>
+</header>
