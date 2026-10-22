@@ -56,7 +56,7 @@ jobs:
           curl -fs http://localhost:8080/v3/api-docs > /dev/null
           curl -fs -o /dev/null http://localhost:8080/swagger-ui/index.html
           curl -fs -H "Origin: https://loud-feliz-web.onrender.com" -I http://localhost:8080/api/produtos | grep -i "access-control-allow-origin" || true
-          docker stats --no-stream api
+          echo "::notice title=memoria da API::$(docker stats --no-stream --format "{{.MemUsage}}" api)"
       - name: Logs do container
         if: failure()
         run: docker logs api 2>&1 | python3 ../.github/scripts/anotar_erros.py -
