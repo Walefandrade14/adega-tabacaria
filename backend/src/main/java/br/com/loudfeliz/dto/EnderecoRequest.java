@@ -13,5 +13,5 @@ public record EnderecoRequest(
         @NotBlank @Size(max = 80) String cidade,
         @NotBlank @Pattern(regexp = "[A-Za-z]{2}", message = "deve ser a sigla do estado") String uf,
         @NotBlank @Pattern(regexp = "\\d{8}", message = "deve conter 8 dígitos") String cep,
-        boolean principal) {
+        Boolean principal) {
 }

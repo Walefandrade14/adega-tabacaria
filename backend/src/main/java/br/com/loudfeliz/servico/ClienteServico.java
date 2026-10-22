@@ -38,7 +38,7 @@ public class ClienteServico {
     public EnderecoResponse adicionarEndereco(Long clienteId, EnderecoRequest requisicao) {
         Cliente cliente = cliente(clienteId);
         List<Endereco> existentes = enderecos.findByClienteIdOrderByPrincipalDescIdAsc(clienteId);
-        boolean principal = requisicao.principal() || existentes.isEmpty();
+        boolean principal = Boolean.TRUE.equals(requisicao.principal()) || existentes.isEmpty();
         if (principal) {
             existentes.forEach(e -> e.setPrincipal(false));
         }

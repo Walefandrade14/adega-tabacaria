@@ -91,8 +91,8 @@ public class ProdutoServico {
                 .orElseThrow(() -> new NaoEncontradoException("Categoria não encontrada.")));
         produto.setFornecedor(requisicao.fornecedorId() == null ? null : fornecedores.findById(requisicao.fornecedorId())
                 .orElseThrow(() -> new NaoEncontradoException("Fornecedor não encontrado.")));
-        produto.setRestritoMaiorIdade(requisicao.restritoMaiorIdade());
-        produto.setOfertaEspecial(requisicao.ofertaEspecial());
+        produto.setRestritoMaiorIdade(Boolean.TRUE.equals(requisicao.restritoMaiorIdade()));
+        produto.setOfertaEspecial(Boolean.TRUE.equals(requisicao.ofertaEspecial()));
         produto.setLimiteDiarioOferta(requisicao.limiteDiarioOferta());
         produto.setAtivo(requisicao.ativo() == null || requisicao.ativo());
         produto.setImagemUrl(requisicao.imagemUrl());
