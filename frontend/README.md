@@ -1,10 +1,10 @@
 # LouD Feliz no Simples — Front-end (Angular 19)
 
-Front-end da Adega & Tabacaria, consumindo a API REST do projeto.
+Site da Adega & Tabacaria, consumindo a API do projeto (`../backend`).
 
 ## Rodar
 
-Requer Node.js 18.19+, 20.11+ ou 22+.
+Requer Node.js 20.11+, 22 ou 24 (LTS recomendado).
 
 ```bash
 npm install
@@ -15,41 +15,18 @@ Abre em `http://localhost:4200`.
 
 ## API
 
-URL base em `src/environments/environment.ts` (padrão `http://localhost:8080`).
+| Ambiente | Arquivo | URL base |
+|---|---|---|
+| Desenvolvimento (`npm start`) | `src/environments/environment.ts` | `http://localhost:8080/api` |
+| Produção (`npm run build`) | `src/environments/environment.prod.ts` | `https://loud-feliz-api.onrender.com/api` |
 
-| Método | Rota             | Uso                     |
-|--------|------------------|-------------------------|
-| GET    | `/produtos`      | Lista do catálogo       |
-| GET    | `/produtos/{id}` | Detalhe de um produto   |
+No deploy, a variável `API_URL` sobrescreve a URL de produção (`node scripts/definir-api.mjs` roda antes do build).
 
-Formato esperado de cada produto (JSON padrão do Spring/JPA, camelCase):
+Rotas usadas: `GET /api/produtos` e `GET /api/produtos/{id}`. O filtro por categoria usa o nome: `Bebidas`, `Tabacaria`, `Narguilé`, `Acessórios`.
 
-```json
-{
-  "id": 1,
-  "nome": "Whisky 12 anos 1L",
-  "descricao": "Blended escocês",
-  "preco": 189.9,
-  "estoqueQuantidade": 12,
-  "categoria": { "id": 1, "nome": "Bebidas" },
-  "restritoMaiorIdade": true,
-  "ofertaEspecial": false,
-  "limiteDiarioOferta": null,
-  "ativo": true,
-  "imagemUrl": null
-}
-```
+Se a API estiver fora do ar, a página de produtos mostra dados de exemplo e um aviso. Em produção o tempo de espera é maior (até 75 s) porque o servidor gratuito dorme e leva cerca de 1 minuto para acordar; nesse meio-tempo aparece o aviso "Acordando o servidor". Para desligar os dados de exemplo, mude `usarDadosExemploSeApiOffline` para `false`.
 
-O filtro por categoria usa o nome: `Bebidas`, `Tabacaria`, `Narguilé`, `Acessórios`.
-
-Se a API estiver fora do ar, a página de produtos mostra dados de exemplo e um aviso.
-Para desligar isso, mude `usarDadosExemploSeApiOffline` para `false`.
-
-No Spring Boot, libere o CORS para o Angular:
-
-```java
-@CrossOrigin(origins = "http://localhost:4200")
-```
+O CORS já está liberado na API para `http://localhost:4200` e para o site no Render.
 
 ## Personalizar
 
