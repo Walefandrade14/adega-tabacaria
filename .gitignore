@@ -9,3 +9,5 @@ frontend/.angular/
 *.iml
 .DS_Store
 Thumbs.db
+local.properties
+.venv/

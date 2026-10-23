@@ -1,0 +1,193 @@
+<section class="topo">
+  <div class="container barra">
+    <div>
+      <span class="eyebrow">Painel da loja</span>
+      <h1 class="gothic">Cadastro</h1>
+    </div>
+    <div class="usuario">
+      <span class="quem"><i class="bi bi-person-circle"></i> {{ sessao()?.nome }} <span class="selo-mini">{{ cargo() }}</span></span>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="sair()"><i class="bi bi-box-arrow-right"></i> Sair</button>
+    </div>
+  </div>
+</section>
+
+<section class="container corpo">
+  @if (erro()) {
+    <p class="alerta erro" role="alert">
+      <i class="bi bi-exclamation-octagon"></i>
+      <span>{{ erro() }} <button type="button" class="btn-link" (click)="carregar()">Recarregar</button></span>
+    </p>
+  }
+
+  <div class="numeros">
+    <div class="numero"><strong>{{ resumo().ativos }}</strong><span>Produtos ativos</span></div>
+    <div class="numero" [class.alerta-num]="resumo().semEstoque"><strong>{{ resumo().semEstoque }}</strong><span>Sem estoque</span></div>
+    <div class="numero" [class.atencao]="resumo().estoqueBaixo"><strong>{{ resumo().estoqueBaixo }}</strong><span>Estoque baixo (≤ 5)</span></div>
+    <div class="numero"><strong>{{ resumo().maiores }}</strong><span>Itens +18</span></div>
+  </div>
+
+  <div class="abas" role="tablist">
+    <button type="button" role="tab" [class.ativa]="aba() === 'produtos'" [attr.aria-selected]="aba() === 'produtos'" (click)="aba.set('produtos')">
+      <i class="bi bi-box-seam"></i> Produtos <span class="qtd">{{ produtos().length }}</span>
+    </button>
+    <button type="button" role="tab" [class.ativa]="aba() === 'categorias'" [attr.aria-selected]="aba() === 'categorias'" (click)="aba.set('categorias')">
+      <i class="bi bi-tags"></i> Categorias <span class="qtd">{{ categorias().length }}</span>
+    </button>
+  </div>
+
+  @if (carregando()) {
+    <div class="cartao carregando">Carregando cadastro…</div>
+  } @else if (aba() === 'produtos') {
+    <div class="cartao">
+      <div class="ferramentas">
+        <label class="busca">
+          <i class="bi bi-search"></i>
+          <span class="sr-only">Buscar produto</span>
+          <input type="search" placeholder="Buscar produto…" [value]="busca()" (input)="atualizarBusca($event)" />
+        </label>
+        <select class="filtro" aria-label="Filtrar por categoria" (change)="filtrarCategoria($event)">
+          <option value="">Todas as categorias</option>
+          @for (c of categorias(); track c.id) {
+            <option [value]="c.id">{{ c.nome }}</option>
+          }
+        </select>
+        <label class="check">
+          <input type="checkbox" [checked]="somenteAtivos()" (change)="somenteAtivos.set(!somenteAtivos())" />
+          Só ativos
+        </label>
+        <button type="button" class="btn btn-primary btn-sm novo" (click)="editando.set('novo')" [disabled]="!categorias().length">
+          <i class="bi bi-plus-lg"></i> Novo produto
+        </button>
+      </div>
+
+      <div class="tabela-wrap">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Preço</th>
+              <th>Estoque</th>
+              <th>Status</th>
+              <th><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filtrados(); track p.id) {
+              <tr [class.inativo]="!p.ativo">
+                <td>
+                  <div class="produto">
+                    <img [src]="imagem(p)" alt="" loading="lazy" />
+                    <div>
+                      <strong>{{ p.nome }}</strong>
+                      <div class="meta">
+                        <span>{{ p.categoria.nome }}</span>
+                        @if (p.restritoMaiorIdade) {
+                          <span class="selo-mini vermelho">+18</span>
+                        }
+                        @if (p.ofertaEspecial) {
+                          <span class="selo-mini">Oferta · {{ p.limiteDiarioOferta ?? 3 }}/dia</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="preco">{{ p.preco | currency: 'BRL' }}</td>
+                <td>
+                  <div class="estoque" [class.zerado]="p.estoqueQuantidade <= 0" [class.baixo]="p.estoqueQuantidade > 0 && p.estoqueQuantidade <= 5">
+                    <button type="button" (click)="ajustarEstoque(p, -1)" [disabled]="p.estoqueQuantidade <= 0 || ocupado() === p.id" [attr.aria-label]="'Tirar 1 de ' + p.nome">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <span>{{ p.estoqueQuantidade }}</span>
+                    <button type="button" (click)="ajustarEstoque(p, 1)" [disabled]="ocupado() === p.id" [attr.aria-label]="'Somar 1 a ' + p.nome">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  @if (p.ativo) {
+                    <span class="selo-mini verde">Ativo</span>
+                  } @else {
+                    <span class="selo-mini cinza">Inativo</span>
+                  }
+                </td>
+                <td>
+                  <div class="acoes">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="editando.set(p)"><i class="bi bi-pencil"></i> Editar</button>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="alternarAtivo(p)" [disabled]="ocupado() === p.id">
+                      @if (p.ativo) {
+                        <i class="bi bi-eye-slash"></i> Desativar
+                      } @else {
+                        <i class="bi bi-eye"></i> Reativar
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="vazio">Nenhum produto encontrado.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  } @else {
+    <div class="cartao categorias">
+      <form class="nova" [formGroup]="formNovaCategoria" (ngSubmit)="criarCategoria()">
+        <label class="campo">
+          <span>Nova categoria</span>
+          <input type="text" formControlName="nome" placeholder="Ex.: Gelo e carvão" />
+        </label>
+        <button type="submit" class="btn btn-primary" [disabled]="formNovaCategoria.invalid || salvandoCategoria()"><i class="bi bi-plus-lg"></i> Adicionar</button>
+      </form>
+
+      @if (erroCategoria()) {
+        <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erroCategoria() }}</p>
+      }
+
+      <ul class="lista-categorias">
+        @for (c of categorias(); track c.id) {
+          <li>
+            @if (editandoCategoria() === c.id) {
+              <form class="edicao" [formGroup]="formEdicaoCategoria" (ngSubmit)="salvarCategoria(c)">
+                <input type="text" formControlName="nome" aria-label="Nome da categoria" />
+                <button type="submit" class="btn btn-primary btn-sm" [disabled]="formEdicaoCategoria.invalid || salvandoCategoria()">Salvar</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editandoCategoria.set(null)">Cancelar</button>
+              </form>
+            } @else {
+              <div class="nome">
+                <strong>{{ c.nome }}</strong>
+                <span>{{ usoPorCategoria()[c.id] ?? 0 }} produto(s)</span>
+              </div>
+              <div class="acoes">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editarCategoria(c)"><i class="bi bi-pencil"></i> Renomear</button>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-ghost]="confirmarExclusao() !== c.id"
+                  [class.btn-perigo]="confirmarExclusao() === c.id"
+                  [disabled]="salvandoCategoria()"
+                  (click)="excluirCategoria(c)">
+                  <i class="bi bi-trash3"></i> {{ confirmarExclusao() === c.id ? 'Confirmar exclusão' : 'Excluir' }}
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>
+
+@if (aviso()) {
+  <div class="toast" role="status"><i class="bi bi-check-circle"></i> {{ aviso() }}</div>
+}
+
+@if (editando()) {
+  <app-produto-formulario
+    [produto]="produtoEmEdicao()"
+    [categorias]="categorias()"
+    (salvo)="aoSalvarProduto($event)"
+    (fechar)="editando.set(null)" />
+}

@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
+import { imagemDoProduto } from '../../core/imagem-produto';
 import { linkWhatsapp } from '../../core/loja';
-import { CATEGORIAS_VITRINE, slugCategoria } from '../../core/models/categoria';
 import { Produto } from '../../core/models/produto';
 
 @Component({
@@ -15,12 +15,7 @@ export class ProdutoCard {
 
   readonly esgotado = computed(() => this.produto().estoqueQuantidade <= 0);
 
-  readonly imagem = computed(() => {
-    const p = this.produto();
-    if (p.imagemUrl) return p.imagemUrl;
-    const slug = slugCategoria(p.categoria?.nome ?? '');
-    return CATEGORIAS_VITRINE.find(c => c.slug === slug)?.imagem ?? 'img/cat-bebidas.jpg';
-  });
+  readonly imagem = computed(() => imagemDoProduto(this.produto()));
 
   readonly linkPedido = computed(() => linkWhatsapp(`Olá! Quero pedir: ${this.produto().nome}`));
 }

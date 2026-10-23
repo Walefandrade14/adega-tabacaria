@@ -1,0 +1,117 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">Crie sua conta</span>
+    <h1 class="gothic">Cadastro</h1>
+    <p class="caps">Leva menos de um minuto</p>
+  </div>
+</section>
+
+<section class="container corpo">
+  <form class="cartao" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    @if (erro()) {
+      <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erro() }}</p>
+    }
+
+    <div class="form-grid">
+      <label class="campo inteiro">
+        <span>Nome completo</span>
+        <input type="text" formControlName="nome" autocomplete="name" [class.erro]="invalido('nome')" />
+        @if (invalido('nome')) {
+          <small>Informe seu nome.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>CPF</span>
+        <input type="text" inputmode="numeric" formControlName="cpf" placeholder="000.000.000-00" maxlength="14" (input)="mascararCpf()" [class.erro]="invalido('cpf')" />
+        @if (invalido('cpf')) {
+          <small>CPF inválido.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>Data de nascimento</span>
+        <input type="date" formControlName="dataNascimento" [max]="hoje" autocomplete="bday" [class.erro]="invalido('dataNascimento')" />
+        @if (invalido('dataNascimento')) {
+          <small>Informe uma data válida.</small>
+        } @else if (menorDeIdade()) {
+          <small class="dica">Menores de 18 podem se cadastrar, mas não compram itens +18.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>E-mail</span>
+        <input type="email" formControlName="email" autocomplete="email" placeholder="voce@email.com" [class.erro]="invalido('email')" />
+        @if (invalido('email')) {
+          <small>Informe um e-mail válido.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>Telefone <em>(opcional)</em></span>
+        <input type="tel" inputmode="numeric" formControlName="telefone" placeholder="(11) 90000-0000" maxlength="15" (input)="mascararTelefone()" autocomplete="tel" [class.erro]="invalido('telefone')" />
+        @if (invalido('telefone')) {
+          <small>Telefone incompleto.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>Senha</span>
+        <input type="password" formControlName="senha" autocomplete="new-password" [class.erro]="invalido('senha')" />
+        @if (invalido('senha')) {
+          <small>Use pelo menos 6 caracteres.</small>
+        }
+      </label>
+
+      <label class="campo">
+        <span>Confirmar senha</span>
+        <input type="password" formControlName="confirmacao" autocomplete="new-password" [class.erro]="invalido('confirmacao')" />
+        @if (invalido('confirmacao')) {
+          <small>As senhas não conferem.</small>
+        }
+      </label>
+    </div>
+
+    <div class="acoes">
+      <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+        @if (enviando()) {
+          Criando conta…
+        } @else {
+          Criar conta <i class="bi bi-arrow-right"></i>
+        }
+      </button>
+      <p>Já tem conta? <a routerLink="/entrar" class="link-ouro">Entrar</a></p>
+    </div>
+
+    @if (lento()) {
+      <p class="lento"><i class="bi bi-hourglass-split"></i> O servidor gratuito está acordando. Pode levar até 1 minuto.</p>
+    }
+  </form>
+
+  <aside class="porque">
+    <h2 class="cartao-titulo">Por que pedimos esses dados</h2>
+    <ul>
+      <li>
+        <i class="bi bi-person-badge"></i>
+        <div>
+          <strong>Data de nascimento</strong>
+          <p>Bebidas alcoólicas, essências, cigarros e carvão só podem ser vendidos para maiores de 18 anos.</p>
+        </div>
+      </li>
+      <li>
+        <i class="bi bi-tag"></i>
+        <div>
+          <strong>CPF</strong>
+          <p>Garante o limite diário das ofertas especiais por pessoa, para a promoção chegar a todo mundo.</p>
+        </div>
+      </li>
+      <li>
+        <i class="bi bi-shield-lock"></i>
+        <div>
+          <strong>Seus dados ficam com a loja</strong>
+          <p>A senha é guardada criptografada e nada é compartilhado com terceiros.</p>
+        </div>
+      </li>
+    </ul>
+  </aside>
+</section>
