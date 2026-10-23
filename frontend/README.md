@@ -22,7 +22,7 @@ Abre em `http://localhost:4200`.
 
 No deploy, a variável `API_URL` sobrescreve a URL de produção (`node scripts/definir-api.mjs` roda antes do build).
 
-Rotas usadas: `GET /api/produtos` e `GET /api/produtos/{id}`. O filtro por categoria usa o nome: `Bebidas`, `Tabacaria`, `Narguilé`, `Acessórios`.
+Rotas da API usadas pelo site: catálogo (`/api/produtos`), autenticação (`/api/auth/*`), conta do cliente (`/api/clientes/me`, endereços), taxa de entrega (`/api/entrega/taxa`) e o cadastro do painel (`/api/admin/produtos`, `/api/admin/categorias`). O token de login fica no `localStorage` e vai no cabeçalho `Authorization` só para a API. O filtro por categoria usa o nome: `Bebidas`, `Tabacaria`, `Narguilé`, `Acessórios`.
 
 Se a API estiver fora do ar, a página de produtos mostra dados de exemplo e um aviso. Em produção o tempo de espera é maior (até 75 s) porque o servidor gratuito dorme e leva cerca de 1 minuto para acordar; nesse meio-tempo aparece o aviso "Acordando o servidor". Para desligar os dados de exemplo, mude `usarDadosExemploSeApiOffline` para `false`.
 
@@ -38,7 +38,11 @@ O CORS já está liberado na API para `http://localhost:4200` e para o site no R
 
 ```
 src/app
-├── core        models, services, dados de exemplo, info da loja
+├── core        auth (sessão, interceptor, guards), models, services, máscaras, dados de exemplo
 ├── shared      header, footer, logo, loja-info, produto-card, category-icon
-└── pages       home, produtos, sobre, contato (lazy loading)
+└── pages       home, produtos, sobre, contato, cadastro, entrar, minha-conta, admin (lazy loading)
 ```
+
+## Teste de ponta a ponta
+
+`e2e/fluxo.py` (Playwright) cadastra um cliente, adiciona endereço, sai e entra de novo; depois entra como dono, cadastra e edita produto, mexe no estoque e cria categoria. Roda no CI contra a API real com MySQL.

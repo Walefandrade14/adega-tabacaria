@@ -8,11 +8,17 @@ Sistema web de comércio para autônomo: vitrine/catálogo, pedidos online com d
 | `frontend/` | Site em Angular 19 (tema escuro vermelho/dourado) |
 | `adega_tabacaria_schema.sql` | Modelo do banco (vira a migration `V1` da API) |
 | `render.yaml` | Blueprint de deploy no Render (API + site) |
-| `.github/workflows/ci.yml` | CI: testes contra MySQL, build da imagem Docker, smoke test e build do Angular |
+| `.github/workflows/ci.yml` | CI: testes da API contra MySQL, imagem Docker com smoke test, build do Angular e teste de ponta a ponta (Playwright) das telas de cadastro e do painel |
 
 ## Rodar local
 
-Pré-requisitos: Java 17+, Node 18.19+/20.11+/22+, MySQL 8 rodando em `localhost:3306` (usuário `root`, senha `root`; mude em `backend/src/main/resources/application.properties` ou pelas variáveis `DB_URL`, `DB_USER`, `DB_PASSWORD`).
+Pré-requisitos: Java 17+, Node 20.11+/22/24 (LTS), MySQL 8 rodando em `localhost:3306`.
+
+O padrão é usuário `root` e senha `root`. Se o seu MySQL usa outra senha, crie `backend/local.properties` (ele fica fora do Git) com:
+
+```properties
+spring.datasource.password=SUA_SENHA
+```
 
 ```bash
 cd backend
@@ -22,6 +28,16 @@ cd backend
 A API sobe em `http://localhost:8080` e cria o banco `adega_tabacaria` sozinha (Flyway cria as tabelas e os dados iniciais). Documentação interativa: `http://localhost:8080/swagger-ui.html`.
 
 Login inicial do dono: usuário `dono`, senha `admin123` (mude com `ADMIN_USER` / `ADMIN_PASSWORD`).
+
+Telas do site:
+
+| Rota | Quem usa | O que faz |
+|---|---|---|
+| `/cadastro` | Cliente | Cria a conta (nome, CPF, nascimento, e-mail, telefone, senha) |
+| `/entrar` | Cliente | Login |
+| `/minha-conta` | Cliente | Dados e endereços de entrega (CEP preenche sozinho e mostra se a loja entrega no bairro) |
+| `/admin/entrar` | Funcionário | Login da equipe (link "Área do funcionário" no rodapé) |
+| `/admin` | Dono / estoque | Cadastro de produtos, ajuste rápido de estoque, ativar/desativar e categorias |
 
 ```bash
 cd frontend

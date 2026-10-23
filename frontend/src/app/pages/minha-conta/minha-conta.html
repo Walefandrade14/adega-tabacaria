@@ -1,0 +1,176 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">{{ perfil() ? 'Olá, ' + perfil()!.nome.split(' ')[0] : 'Sua conta' }}</span>
+    <h1 class="gothic">Minha conta</h1>
+    <p class="caps">Dados e endereços de entrega</p>
+  </div>
+</section>
+
+<section class="container corpo">
+  @if (bemvindo() && !enderecos().length && !carregando()) {
+    <p class="alerta ok bemvindo"><i class="bi bi-check-circle"></i> Conta criada! Cadastre um endereço para receber em casa.</p>
+  }
+  @if (erro()) {
+    <p class="alerta erro" role="alert">
+      <i class="bi bi-exclamation-octagon"></i>
+      <span>{{ erro() }} <button type="button" class="btn-link" (click)="carregar()">Tentar de novo</button></span>
+    </p>
+  }
+
+  @if (carregando()) {
+    <div class="grade">
+      <div class="cartao skeleton"></div>
+      <div class="cartao skeleton alto"></div>
+    </div>
+  } @else if (perfil()) {
+    @let p = perfil()!;
+    <div class="grade">
+      <aside class="cartao dados">
+        <div class="avatar gothic">{{ p.nome.charAt(0) }}</div>
+        <h2>{{ p.nome }}</h2>
+        @if (p.maiorDeIdade) {
+          <span class="selo-mini verde"><i class="bi bi-patch-check"></i> Maior de 18</span>
+        } @else {
+          <span class="selo-mini vermelho">Menor de 18 · sem itens +18</span>
+        }
+        <dl>
+          <div><dt>E-mail</dt><dd>{{ p.email }}</dd></div>
+          <div><dt>Telefone</dt><dd>{{ telefone() ?? '—' }}</dd></div>
+          <div><dt>Nascimento</dt><dd>{{ p.dataNascimento | date: 'dd/MM/yyyy' }}</dd></div>
+        </dl>
+        <div class="acoes-dados">
+          <a routerLink="/produtos" class="btn btn-primary btn-sm">Ver produtos <i class="bi bi-arrow-right"></i></a>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="sair()"><i class="bi bi-box-arrow-right"></i> Sair</button>
+        </div>
+      </aside>
+
+      <div class="cartao enderecos">
+        <div class="cabecalho">
+          <h2 class="cartao-titulo">Endereços de entrega</h2>
+          @if (!formAberto()) {
+            <button type="button" class="btn btn-outline btn-sm" (click)="abrirFormulario()"><i class="bi bi-plus-lg"></i> Novo endereço</button>
+          }
+        </div>
+
+        @if (enderecos().length) {
+          <ul class="lista">
+            @for (e of enderecos(); track e.id) {
+              <li class="endereco">
+                <i class="bi bi-geo-alt"></i>
+                <div class="texto">
+                  <div class="titulo">
+                    <strong>{{ e.apelido || 'Endereço' }}</strong>
+                    @if (e.principal) {
+                      <span class="selo-mini">Principal</span>
+                    }
+                  </div>
+                  <p>{{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' — ' + e.complemento : '' }}</p>
+                  <p class="sub">{{ e.bairro }} · {{ e.cidade }}/{{ e.uf }} · CEP {{ cepFormatado(e.cep) }}</p>
+                  @let t = entrega(e.id);
+                  @if (t === undefined) {
+                    <p class="entrega carregando">Consultando entrega…</p>
+                  } @else if (t) {
+                    <p class="entrega ok"><i class="bi bi-truck"></i> Entregamos aqui · taxa {{ t.valor | currency: 'BRL' }}</p>
+                  } @else {
+                    <p class="entrega fora"><i class="bi bi-x-circle"></i> Ainda não entregamos neste bairro — dá para retirar na loja</p>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-ghost]="confirmarRemocao() !== e.id"
+                  [class.btn-perigo]="confirmarRemocao() === e.id"
+                  [disabled]="removendo() === e.id"
+                  (click)="remover(e)">
+                  @if (confirmarRemocao() === e.id) {
+                    Confirmar
+                  } @else {
+                    <i class="bi bi-trash3"></i><span class="sr-only">Remover</span>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        } @else if (!formAberto()) {
+          <p class="vazio">Nenhum endereço cadastrado.</p>
+        }
+
+        @if (formAberto()) {
+          <form class="novo" [formGroup]="form" (ngSubmit)="salvarEndereco()" novalidate>
+            @if (erroEndereco()) {
+              <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erroEndereco() }}</p>
+            }
+            <div class="form-grid">
+              <label class="campo">
+                <span>CEP</span>
+                <input type="text" inputmode="numeric" formControlName="cep" placeholder="00000-000" maxlength="9" (input)="aoDigitarCep()" autocomplete="postal-code" [class.erro]="invalido('cep')" />
+                @if (buscandoCep()) {
+                  <small class="dica">Buscando endereço…</small>
+                } @else if (cepNaoEncontrado()) {
+                  <small class="dica">CEP não encontrado. Preencha à mão.</small>
+                } @else if (invalido('cep')) {
+                  <small>Informe os 8 dígitos do CEP.</small>
+                }
+              </label>
+              <label class="campo">
+                <span>Apelido <em>(opcional)</em></span>
+                <input type="text" formControlName="apelido" placeholder="Casa, Trabalho…" />
+              </label>
+              <label class="campo inteiro">
+                <span>Rua / avenida</span>
+                <input type="text" formControlName="logradouro" autocomplete="address-line1" [class.erro]="invalido('logradouro')" />
+                @if (invalido('logradouro')) {
+                  <small>Informe a rua.</small>
+                }
+              </label>
+              <label class="campo">
+                <span>Número</span>
+                <input type="text" formControlName="numero" [class.erro]="invalido('numero')" />
+                @if (invalido('numero')) {
+                  <small>Informe o número.</small>
+                }
+              </label>
+              <label class="campo">
+                <span>Complemento <em>(opcional)</em></span>
+                <input type="text" formControlName="complemento" placeholder="Apto, bloco…" autocomplete="address-line2" />
+              </label>
+              <label class="campo inteiro">
+                <span>Bairro</span>
+                <input type="text" formControlName="bairro" [class.erro]="invalido('bairro')" />
+                @if (invalido('bairro')) {
+                  <small>Informe o bairro.</small>
+                }
+              </label>
+              <label class="campo">
+                <span>Cidade</span>
+                <input type="text" formControlName="cidade" autocomplete="address-level2" [class.erro]="invalido('cidade')" />
+                @if (invalido('cidade')) {
+                  <small>Informe a cidade.</small>
+                }
+              </label>
+              <label class="campo">
+                <span>UF</span>
+                <input type="text" formControlName="uf" maxlength="2" placeholder="SP" autocomplete="address-level1" [class.erro]="invalido('uf')" />
+                @if (invalido('uf')) {
+                  <small>Use a sigla, ex.: SP.</small>
+                }
+              </label>
+              <label class="check inteiro">
+                <input type="checkbox" formControlName="principal" />
+                Usar como endereço principal
+              </label>
+            </div>
+            <div class="acoes-form">
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="salvando()">
+                {{ salvando() ? 'Salvando…' : 'Salvar endereço' }}
+              </button>
+              @if (enderecos().length) {
+                <button type="button" class="btn btn-ghost btn-sm" (click)="formAberto.set(false)">Cancelar</button>
+              }
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  }
+</section>

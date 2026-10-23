@@ -22,6 +22,19 @@
           {{ link.rotulo }}
         </a>
       }
+      @if (auth.cliente()) {
+        <a routerLink="/minha-conta" routerLinkActive="active" class="conta" (click)="fecharMenu()">
+          <i class="bi bi-person-circle"></i> {{ auth.primeiroNome() || 'Minha conta' }}
+        </a>
+      } @else if (auth.funcionario()) {
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="conta" (click)="fecharMenu()">
+          <i class="bi bi-speedometer2"></i> Painel
+        </a>
+      } @else {
+        <a routerLink="/entrar" routerLinkActive="active" class="conta" (click)="fecharMenu()">
+          <i class="bi bi-person"></i> Entrar
+        </a>
+      }
     </nav>
   </div>
 </header>

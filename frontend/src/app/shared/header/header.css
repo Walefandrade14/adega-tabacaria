@@ -16,6 +16,7 @@
 
 .nav {
   display: flex;
+  align-items: center;
   gap: 40px;
 }
 
@@ -51,6 +52,30 @@
   transform: scaleX(1);
 }
 
+.nav a.conta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--gold-line);
+  border-radius: 999px;
+  font-size: 14px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.nav a.conta::after {
+  display: none;
+}
+
+.nav a.conta .bi {
+  color: var(--gold);
+}
+
+.nav a.conta:hover,
+.nav a.conta.active {
+  border-color: var(--red);
+}
+
 .toggle {
   display: none;
   background: none;
@@ -75,6 +100,7 @@
   }
 
   .nav {
+    align-items: stretch;
     position: absolute;
     top: 100%;
     left: 0;
@@ -98,5 +124,12 @@
 
   .nav a::after {
     display: none;
+  }
+
+  .nav a.conta {
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid rgba(201, 161, 94, 0.12);
+    border-radius: 0;
   }
 }

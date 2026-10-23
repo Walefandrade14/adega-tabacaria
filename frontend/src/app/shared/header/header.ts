@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { Logo } from '../logo/logo';
 
 @Component({
@@ -9,6 +10,7 @@ import { Logo } from '../logo/logo';
   styleUrl: './header.css'
 })
 export class Header {
+  readonly auth = inject(AuthService);
   readonly menuAberto = signal(false);
 
   readonly links = [
