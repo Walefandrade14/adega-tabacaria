@@ -1,5 +1,7 @@
+import json
 import os
 import random
+import re
 import sys
 import uuid
 
@@ -131,6 +133,34 @@ def dono(navegador, erros):
     print("dono: login, produto, estoque, edição, categoria e vitrine ok")
 
 
+def tratamento_de_erros(navegador, erros):
+    pg = contexto(navegador).new_page()
+    pg.on("pageerror", lambda e: erros.append(str(e)))
+
+    pg.goto(BASE + "/rota-que-nao-existe")
+    expect(pg.get_by_role("heading", name="Página não encontrada")).to_be_visible()
+    expect(pg).to_have_title(re.compile("Página não encontrada"))
+    expect(pg.get_by_text("/rota-que-nao-existe")).to_be_visible()
+
+    invalida = json.dumps({"token": "token-invalido", "tipo": "Bearer", "expiraEm": "2099-01-01T00:00:00Z",
+                           "nome": "Sessão Antiga", "perfil": "CLIENTE"})
+    pg.evaluate("s => localStorage.setItem('loudfeliz.sessao', s)", invalida)
+    pg.goto(BASE + "/minha-conta")
+    pg.wait_for_url("**/entrar?voltar=**")
+    assert "minha-conta" in pg.url, pg.url
+    expect(pg.locator(".aviso-global")).to_contain_text("Sua sessão expirou")
+    assert pg.evaluate("localStorage.getItem('loudfeliz.sessao')") is None
+
+    pg.evaluate("s => localStorage.setItem('loudfeliz.sessao', s)", invalida)
+    pg.goto(BASE + "/produtos")
+    expect(pg.locator(".aviso-global")).to_contain_text("Sua sessão expirou")
+    expect(pg.locator("app-produto-card").first).to_be_visible()
+    expect(pg.get_by_text("exibindo dados de exemplo")).to_have_count(0)
+    pg.get_by_role("button", name="Fechar aviso").click()
+    expect(pg.locator(".aviso-global")).to_have_count(0)
+    print("erros: 404, sessão inválida na área restrita e na vitrine ok")
+
+
 def main():
     erros = []
     with sync_playwright() as pw:
@@ -138,6 +168,7 @@ def main():
         try:
             cliente(navegador, erros)
             dono(navegador, erros)
+            tratamento_de_erros(navegador, erros)
         except Exception as e:
             mensagem = str(e).replace("%", "%25").replace("\n", "%0A")
             print(f"::error title=E2E::{mensagem[:3500]}")

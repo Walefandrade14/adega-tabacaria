@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import br.com.loudfeliz.dominio.Fuso;
@@ -61,6 +63,38 @@ class RegrasDeNegocioTest {
         Boolean delivery = JsonPath.read(chamar(get("/api/loja/status"), null, null, 200), "$.deliveryDisponivel");
         assertTrue(delivery);
         chamar(get("/actuator/health"), null, null, 200);
+    }
+
+    @Test
+    void errosDeSegurancaERotaSaemEmProblemDetail() throws Exception {
+        String semToken = chamar(get("/api/admin/produtos"), null, null, 401);
+        assertEquals("Não autorizado", JsonPath.read(semToken, "$.title"));
+        assertEquals("Faça login para acessar este recurso.", JsonPath.read(semToken, "$.detail"));
+
+        String tokenRuim = mvc.perform(get("/api/admin/produtos").header("Authorization", "Bearer token-invalido"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().exists("WWW-Authenticate"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertEquals("Sessão expirada ou inválida. Entre de novo.", JsonPath.read(tokenRuim, "$.detail"));
+
+        String cliente = novoCliente(LocalDate.of(1995, 5, 10), "Centro").token();
+        String negado = chamar(get("/api/admin/produtos"), cliente, null, 403);
+        assertEquals("Acesso negado", JsonPath.read(negado, "$.title"));
+        Integer statusNegado = JsonPath.read(negado, "$.status");
+        assertEquals(403, statusNegado);
+
+        String rotaInexistente = chamar(get("/api/nao-existe"), dono, null, 404);
+        assertEquals("Não encontrado", JsonPath.read(rotaInexistente, "$.title"));
+
+        String metodoErrado = chamar(delete("/api/produtos"), dono, null, 405);
+        assertEquals("Método não permitido", JsonPath.read(metodoErrado, "$.title"));
+
+        String jsonQuebrado = chamar(post("/api/auth/login"), null, "{", 400);
+        assertEquals("O corpo da requisição não é um JSON válido para este endpoint.", JsonPath.read(jsonQuebrado, "$.detail"));
+
+        String senhaErrada = chamar(post("/api/auth/funcionarios/login"), null, """
+                {"usuario":"dono","senha":"errada"}""", 401);
+        assertEquals("Não autorizado", JsonPath.read(senhaErrada, "$.title"));
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +26,12 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,7 +40,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SegurancaConfig {
 
     @Bean
-    public SecurityFilterChain filtroDeSeguranca(HttpSecurity http, JwtAuthenticationConverter conversor) throws Exception {
+    public SecurityFilterChain filtroDeSeguranca(HttpSecurity http, JwtAuthenticationConverter conversor,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolvedor) throws Exception {
+        AuthenticationEntryPoint naoAutenticado = (req, res, erro) -> {
+            new BearerTokenAuthenticationEntryPoint().commence(req, res, erro);
+            resolvedor.resolveException(req, res, null, erro);
+        };
+        AccessDeniedHandler acessoNegado = (req, res, erro) -> {
+            new BearerTokenAccessDeniedHandler().handle(req, res, erro);
+            resolvedor.resolveException(req, res, null, erro);
+        };
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -49,7 +64,11 @@ public class SegurancaConfig {
                         .requestMatchers("/api/admin/**").hasAnyRole("DONO", "CAIXA", "ESTOQUE", "ENTREGADOR")
                         .requestMatchers("/api/clientes/**", "/api/pedidos/**", "/api/carrinho/**", "/api/pagamentos/**").hasRole("CLIENTE")
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(conversor)));
+                .exceptionHandling(e -> e.authenticationEntryPoint(naoAutenticado).accessDeniedHandler(acessoNegado))
+                .oauth2ResourceServer(o -> o
+                        .jwt(j -> j.jwtAuthenticationConverter(conversor))
+                        .authenticationEntryPoint(naoAutenticado)
+                        .accessDeniedHandler(acessoNegado));
         return http.build();
     }
 

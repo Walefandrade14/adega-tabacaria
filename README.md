@@ -78,6 +78,23 @@ Funcionários (`/api/admin/**`): produtos, estoque, categorias, fornecedores, co
 
 O gateway de pagamento é simulado (`simularRecusa: true` força recusa no cartão).
 
+## Tratamento de erros
+
+Toda resposta de erro da API sai em ProblemDetail (RFC 7807): `title`, `status`, `detail` e, quando cabe, `regra` (RN violada), `campos` (validação) ou `codigo` (rastreio no log).
+
+| Status | Quando |
+|---|---|
+| 400 | Validação dos campos, JSON quebrado, parâmetro com tipo errado ou ausente, CPF inválido |
+| 401 | Sem token, token inválido/expirado ou login errado |
+| 403 | Perfil sem acesso à rota |
+| 404 | Registro ou rota inexistente (inclusive recurso de outro cliente) |
+| 405 / 415 | Método ou tipo de conteúdo não aceito |
+| 409 | Duplicidade (e-mail, CPF, usuário) ou registro em uso |
+| 422 | Regra de negócio RN01–RN09 |
+| 500 | Erro inesperado: a resposta traz só um `codigo`, o stack trace fica no log com o mesmo código |
+
+No site, `core/erro-api.ts` transforma essas respostas em mensagem para o usuário; o interceptor encerra a sessão inválida (e manda para o login se a tela for restrita); o `ErroGlobal` mostra um aviso com "Recarregar" para qualquer erro não tratado, inclusive site desatualizado depois de um deploy; e rotas inexistentes caem na página 404.
+
 ## Deploy (grátis)
 
 Banco MySQL no [Aiven](https://aiven.io/free-mysql-database) e API + site no [Render](https://render.com), pelo `render.yaml`.

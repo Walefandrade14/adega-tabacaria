@@ -45,4 +45,11 @@ src/app
 
 ## Teste de ponta a ponta
 
-`e2e/fluxo.py` (Playwright) cadastra um cliente, adiciona endereço, sai e entra de novo; depois entra como dono, cadastra e edita produto, mexe no estoque e cria categoria. Roda no CI contra a API real com MySQL.
+`e2e/fluxo.py` (Playwright) cadastra um cliente, adiciona endereço, sai e entra de novo; depois entra como dono, cadastra e edita produto, mexe no estoque e cria categoria; por fim confere a página 404 e a sessão inválida (na área restrita volta para o login, na vitrine os produtos carregam sem o token). Roda no CI contra a API real com MySQL.
+
+## Erros
+
+- `core/erro-api.ts`: mensagem para o usuário a partir da resposta da API (campos, `detail`, sem conexão, tempo esgotado, 5xx).
+- `core/auth/auth.interceptor.ts`: token só vai para a API (fora de `/auth`); 401 com token encerra a sessão, avisa e repete a chamada sem token.
+- `core/erro-global.ts` + `shared/aviso-global`: `ErrorHandler` global com aviso e botão "Recarregar".
+- `pages/nao-encontrada`: página 404.

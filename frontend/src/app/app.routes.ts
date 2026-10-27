@@ -25,5 +25,9 @@ export const routes: Routes = [
     canActivate: [funcionarioGuard],
     loadComponent: () => import('./pages/admin/painel/painel').then(m => m.Painel)
   },
-  { path: '**', redirectTo: '' }
+  {
+    path: '**',
+    title: 'Página não encontrada | LouD Feliz no Simples',
+    loadComponent: () => import('./pages/nao-encontrada/nao-encontrada').then(m => m.NaoEncontrada)
+  }
 ];

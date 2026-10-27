@@ -1,17 +1,19 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AvisoGlobal } from './shared/aviso-global/aviso-global';
 import { Footer } from './shared/footer/footer';
 import { Header } from './shared/header/header';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Footer],
+  imports: [RouterOutlet, Header, Footer, AvisoGlobal],
   template: `
     <app-header />
     <main>
       <router-outlet />
     </main>
     <app-footer />
+    <app-aviso-global />
   `,
   styles: `
     :host {
