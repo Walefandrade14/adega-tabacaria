@@ -11,3 +11,4 @@ frontend/.angular/
 Thumbs.db
 local.properties
 .venv/
+deploy/vm/.env

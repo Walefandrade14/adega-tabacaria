@@ -1,0 +1,63 @@
+name: loudfeliz
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?rode o instalar.sh}
+      MYSQL_DATABASE: adega_tabacaria
+      MYSQL_USER: loudfeliz
+      MYSQL_PASSWORD: ${DB_PASSWORD:?rode o instalar.sh}
+      TZ: America/Sao_Paulo
+    command:
+      - --skip-log-bin
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=64M
+      - --max-connections=30
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  api:
+    build: ../../backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://db:3306/adega_tabacaria?allowPublicKeyRetrieval=true&useSSL=false
+      DB_USER: loudfeliz
+      DB_PASSWORD: ${DB_PASSWORD:?rode o instalar.sh}
+      JWT_SECRET: ${JWT_SECRET:?rode o instalar.sh}
+      ADMIN_USER: ${ADMIN_USER:-dono}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?rode o instalar.sh}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      TZ: America/Sao_Paulo
+
+  web:
+    build: ../../frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-dados:/data
+      - caddy-config:/config
+
+volumes:
+  mysql:
+  caddy-dados:
+  caddy-config:

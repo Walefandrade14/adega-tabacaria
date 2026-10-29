@@ -8,6 +8,7 @@ Sistema web de comércio para autônomo: vitrine/catálogo, pedidos online com d
 | `frontend/` | Site em Angular 19 (tema escuro vermelho/dourado) |
 | `adega_tabacaria_schema.sql` | Modelo do banco (vira a migration `V1` da API) |
 | `render.yaml` | Blueprint de deploy no Render (API + site) |
+| `deploy/vm/` | Deploy numa VM própria (Azure etc.): Docker Compose com MySQL, API e Caddy com HTTPS |
 | `.github/workflows/ci.yml` | CI: testes da API contra MySQL, imagem Docker com smoke test, build do Angular e teste de ponta a ponta (Playwright) das telas de cadastro e do painel |
 
 ## Rodar local
@@ -95,7 +96,7 @@ Toda resposta de erro da API sai em ProblemDetail (RFC 7807): `title`, `status`,
 
 No site, `core/erro-api.ts` transforma essas respostas em mensagem para o usuário; o interceptor encerra a sessão inválida (e manda para o login se a tela for restrita); o `ErroGlobal` mostra um aviso com "Recarregar" para qualquer erro não tratado, inclusive site desatualizado depois de um deploy; e rotas inexistentes caem na página 404.
 
-## Deploy (grátis)
+## Deploy no Render (grátis)
 
 Banco MySQL no [Aiven](https://aiven.io/free-mysql-database) e API + site no [Render](https://render.com), pelo `render.yaml`.
 
@@ -110,3 +111,27 @@ Banco MySQL no [Aiven](https://aiven.io/free-mysql-database) e API + site no [Re
 Se o Render der outro endereço para a API (nome já usado), troque a variável `API_URL` do serviço `loud-feliz-web` e faça *Manual Deploy*.
 
 No plano grátis a API dorme após 15 min sem acesso e leva ~1 min para acordar; o site mostra um aviso enquanto isso. Cada push na `main` faz novo deploy.
+
+## Deploy na sua VM (Azure ou qualquer Ubuntu)
+
+`deploy/vm` sobe tudo com Docker Compose numa máquina só: MySQL, API e o site no [Caddy](https://caddyserver.com), que também faz o proxy de `/api` (mesmo endereço, sem CORS) e tira o certificado HTTPS sozinho quando a VM tem um nome DNS.
+
+1. **VM:** Ubuntu Server 24.04, tamanho B1s (grátis no Azure for Students) ou maior. Em *Rede*, libere as portas de entrada **80** e **443** além da 22 (no Cloud Shell: `az vm open-port -g <grupo> -n <vm> --port 80,443`).
+2. **Nome DNS (para ter HTTPS):** na *Visão geral* da VM, clique em *Nome DNS → Configurar*, coloque um rótulo (ex.: `loudfeliz`) e salve. Fica `loudfeliz.<região>.cloudapp.azure.com`.
+3. **Na VM** (`ssh azureuser@<IP>`):
+
+   ```bash
+   git clone https://github.com/Walefandrade14/adega-tabacaria.git
+   cd adega-tabacaria
+   sudo bash deploy/vm/instalar.sh loudfeliz.brazilsouth.cloudapp.azure.com
+   ```
+
+   Sem nome DNS, passe o IP público: o site fica em `http://<IP>`.
+
+O script instala o Docker, cria swap se a VM tiver pouca memória, gera as senhas em `deploy/vm/.env` (banco, JWT e a do usuário `dono`), constrói as imagens e só termina quando a API responde; no fim mostra o endereço e a senha do painel. A primeira vez leva de 5 a 15 min, conforme o tamanho da VM.
+
+- Atualizar: `git pull && sudo bash deploy/vm/instalar.sh`
+- Logs: `sudo docker compose -f deploy/vm/docker-compose.yml logs -f api`
+- Backup do banco: `sudo docker compose -f deploy/vm/docker-compose.yml exec db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" adega_tabacaria' > backup.sql`
+
+A senha do `dono` vale na primeira subida (quando ele é criado); trocar `ADMIN_PASSWORD` depois não muda o usuário que já existe. O CI sobe essa mesma stack com o `instalar.sh` e roda o teste de ponta a ponta contra ela.

@@ -10,6 +10,7 @@ from playwright.sync_api import expect, sync_playwright
 BASE = os.environ.get("E2E_BASE", "http://127.0.0.1:4200")
 MOCK = os.environ.get("E2E_MOCK")
 MINIMO_PRODUTOS = int(os.environ.get("E2E_MINIMO_PRODUTOS", "10"))
+SENHA_DONO = os.environ.get("E2E_SENHA_DONO", "admin123")
 
 
 def cpf_valido():
@@ -93,7 +94,7 @@ def dono(navegador, erros):
     pg.goto(BASE + "/admin")
     pg.wait_for_url("**/admin/entrar**")
     pg.fill("input[formcontrolname=usuario]", "dono")
-    pg.fill("input[formcontrolname=senha]", "admin123")
+    pg.fill("input[formcontrolname=senha]", SENHA_DONO)
     pg.click("button[type=submit]")
     pg.wait_for_url(BASE + "/admin")
     expect(pg.locator(".tabela tbody tr").nth(MINIMO_PRODUTOS - 1)).to_be_visible()
