@@ -11,6 +11,19 @@ Sistema web de comércio para autônomo: vitrine/catálogo, pedidos online com d
 | `deploy/vm/` | Deploy numa VM própria (Azure etc.): Docker Compose com MySQL, API e Caddy com HTTPS |
 | `.github/workflows/ci.yml` | CI: testes da API contra MySQL, imagem Docker com smoke test, build do Angular e teste de ponta a ponta (Playwright) das telas de cadastro e do painel |
 
+**No ar:** [loudfeliz.chilecentral.cloudapp.azure.com](https://loudfeliz.chilecentral.cloudapp.azure.com)
+
+## Protótipo (Figma)
+
+[Arquivo de design no Figma](https://www.figma.com/design/G2MQcwhF17Zy43fYk8hvSK/Adega-Tabacaria) com 25 telas (desktop e mobile) e os componentes. O protótipo é navegável, com estados de hover, sessão de cliente e de funcionário, modais e menu mobile:
+
+| Fluxo | Começa em | Abrir |
+|---|---|---|
+| Site desktop | Home | [protótipo](https://www.figma.com/proto/G2MQcwhF17Zy43fYk8hvSK/Adega-Tabacaria?node-id=26-2&starting-point-node-id=26%3A2) |
+| Conta do cliente | Entrar | [protótipo](https://www.figma.com/proto/G2MQcwhF17Zy43fYk8hvSK/Adega-Tabacaria?node-id=44-1496&starting-point-node-id=44%3A1496) |
+| Painel do dono | Área do funcionário | [protótipo](https://www.figma.com/proto/G2MQcwhF17Zy43fYk8hvSK/Adega-Tabacaria?node-id=44-1697&starting-point-node-id=44%3A1697) |
+| Mobile | Home | [protótipo](https://www.figma.com/proto/G2MQcwhF17Zy43fYk8hvSK/Adega-Tabacaria?node-id=29-1189&starting-point-node-id=29%3A1189) |
+
 ## Rodar local
 
 Pré-requisitos: Java 17+, Node 20.11+/22/24 (LTS), MySQL 8 rodando em `localhost:3306`.
