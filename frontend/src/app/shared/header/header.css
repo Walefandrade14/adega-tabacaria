@@ -76,6 +76,47 @@
   border-color: var(--red);
 }
 
+.lado {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.sacola {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gold-line);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 18px;
+  transition: border-color 0.2s;
+}
+
+.sacola:hover,
+.sacola.active {
+  border-color: var(--red);
+}
+
+.contador {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
 .toggle {
   display: none;
   background: none;
@@ -91,6 +132,10 @@
 @media (max-width: 760px) {
   .bar {
     min-height: 84px;
+  }
+
+  .lado {
+    gap: 12px;
   }
 
   .toggle {

@@ -39,7 +39,8 @@
           <div><dt>Nascimento</dt><dd>{{ p.dataNascimento | date: 'dd/MM/yyyy' }}</dd></div>
         </dl>
         <div class="acoes-dados">
-          <a routerLink="/produtos" class="btn btn-primary btn-sm">Ver produtos <i class="bi bi-arrow-right"></i></a>
+          <a routerLink="/pedidos" class="btn btn-primary btn-sm"><i class="bi bi-receipt"></i> Meus pedidos</a>
+          <a routerLink="/produtos" class="btn btn-outline btn-sm">Ver produtos</a>
           <button type="button" class="btn btn-ghost btn-sm" (click)="sair()"><i class="bi bi-box-arrow-right"></i> Sair</button>
         </div>
       </aside>

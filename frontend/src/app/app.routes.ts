@@ -14,6 +14,19 @@ export const routes: Routes = [
     canActivate: [clienteGuard],
     loadComponent: () => import('./pages/minha-conta/minha-conta').then(m => m.MinhaConta)
   },
+  { path: 'carrinho', title: 'Carrinho | LouD Feliz no Simples', loadComponent: () => import('./pages/carrinho/carrinho').then(m => m.Carrinho) },
+  {
+    path: 'pedidos',
+    title: 'Meus pedidos | LouD Feliz no Simples',
+    canActivate: [clienteGuard],
+    loadComponent: () => import('./pages/pedidos/meus-pedidos').then(m => m.MeusPedidos)
+  },
+  {
+    path: 'pedidos/:id',
+    title: 'Pedido | LouD Feliz no Simples',
+    canActivate: [clienteGuard],
+    loadComponent: () => import('./pages/pedidos/pedido-detalhe').then(m => m.PedidoDetalhe)
+  },
   {
     path: 'admin/entrar',
     title: 'Área do funcionário | LouD Feliz no Simples',

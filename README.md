@@ -9,7 +9,7 @@ Sistema web de comércio para autônomo: vitrine/catálogo, pedidos online com d
 | `adega_tabacaria_schema.sql` | Modelo do banco (vira a migration `V1` da API) |
 | `render.yaml` | Blueprint de deploy no Render (API + site) |
 | `deploy/vm/` | Deploy numa VM própria (Azure etc.): Docker Compose com MySQL, API e Caddy com HTTPS |
-| `.github/workflows/ci.yml` | CI: testes da API contra MySQL, imagem Docker com smoke test, build do Angular e teste de ponta a ponta (Playwright) das telas de cadastro e do painel |
+| `.github/workflows/ci.yml` | CI: testes da API contra MySQL, imagem Docker com smoke test, build do Angular e teste de ponta a ponta (Playwright) do cadastro, da compra (carrinho → pedido → Pix) e do painel |
 
 **No ar:** [loudfeliz.chilecentral.cloudapp.azure.com](https://loudfeliz.chilecentral.cloudapp.azure.com)
 
@@ -50,8 +50,13 @@ Telas do site:
 | `/cadastro` | Cliente | Cria a conta (nome, CPF, nascimento, e-mail, telefone, senha) |
 | `/entrar` | Cliente | Login |
 | `/minha-conta` | Cliente | Dados e endereços de entrega (CEP preenche sozinho e mostra se a loja entrega no bairro) |
+| `/carrinho` | Visitante / cliente | Itens com quantidade, entrega ou retirada, endereço, descontos, taxa e total calculados pela API; mostra a regra que bloqueia (RN01–RN09) |
+| `/pedidos` | Cliente | Meus pedidos com o status de cada um |
+| `/pedidos/:id` | Cliente | Andamento, pagamento (cartão, Pix com código copia e cola, dinheiro) e cancelamento |
 | `/admin/entrar` | Funcionário | Login da equipe (link "Área do funcionário" no rodapé) |
-| `/admin` | Dono / estoque | Cadastro de produtos, ajuste rápido de estoque, ativar/desativar e categorias |
+| `/admin` | Dono / estoque | Cadastro de produtos, ajuste rápido de estoque, ativar/desativar, categorias e pedidos (avançar status e cancelar com estorno) |
+
+Fluxo de compra: o botão **Adicionar** do card põe o produto no carrinho (guardado no navegador). No carrinho o cliente escolhe entrega ou retirada, a API simula o pedido a cada mudança e o botão só libera quando nenhuma regra bloqueia. Depois de criar o pedido ele paga na tela do pedido; no Pix, "Já paguei" simula a confirmação do banco. No painel, a aba **Pedidos** leva o pedido de Pago → Em separação → Saiu para entrega (ou direto para Concluído na retirada) → Concluído.
 
 ```bash
 cd frontend

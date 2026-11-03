@@ -1,0 +1,48 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">Sua conta</span>
+    <h1 class="gothic">Meus pedidos</h1>
+    <p class="caps">Acompanhe pagamentos e entregas</p>
+  </div>
+</section>
+
+<section class="container corpo estreito">
+  <a routerLink="/minha-conta" class="voltar"><i class="bi bi-arrow-left"></i> Minha conta</a>
+
+  @if (erro()) {
+    <p class="alerta erro" role="alert">
+      <i class="bi bi-exclamation-octagon"></i>
+      <span>{{ erro() }} <button type="button" class="btn-link" (click)="carregar()">Tentar de novo</button></span>
+    </p>
+  }
+
+  @if (carregando()) {
+    <div class="cartao carregando">Carregando pedidos…</div>
+  } @else if (!lista().length && !erro()) {
+    <div class="cartao vazio">
+      <i class="bi bi-receipt"></i>
+      <h2>Você ainda não fez pedidos</h2>
+      <a routerLink="/produtos" class="btn btn-primary">Ver produtos <i class="bi bi-arrow-right"></i></a>
+    </div>
+  } @else {
+    <ul class="lista-pedidos">
+      @for (p of lista(); track p.id) {
+        <li>
+          <a [routerLink]="['/pedidos', p.id]" class="cartao linha-pedido">
+            <div class="numero">
+              <strong>Pedido #{{ p.id }}</strong>
+              <span>{{ p.criadoEm | date: "dd/MM/yyyy 'às' HH:mm" }}</span>
+            </div>
+            <div class="detalhe">
+              <span>{{ quantidade(p) }} {{ quantidade(p) === 1 ? 'item' : 'itens' }}</span>
+              <span>{{ p.tipoEntrega === 'DELIVERY' ? 'Entrega' : 'Retirada na loja' }}</span>
+            </div>
+            <strong class="total">{{ p.total | currency: 'BRL' }}</strong>
+            <span [class]="'selo-mini ' + cor[p.status]">{{ rotulo[p.status] }}</span>
+            <i class="bi bi-chevron-right seta"></i>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

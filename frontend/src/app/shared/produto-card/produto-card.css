@@ -107,3 +107,7 @@ h3 {
   font-size: 13px;
   gap: 8px;
 }
+
+.rodape .btn.ok {
+  background: var(--green);
+}

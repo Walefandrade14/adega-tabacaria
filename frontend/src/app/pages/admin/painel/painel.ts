@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,9 +9,15 @@ import { mensagemDeErro } from '../../../core/erro-api';
 import { imagemDoProduto } from '../../../core/imagem-produto';
 import { Perfil } from '../../../core/models/auth';
 import { Categoria } from '../../../core/models/categoria';
+import { COR_STATUS, Pedido, STATUS_PEDIDO, StatusPedido, proximoStatus } from '../../../core/models/pedido';
 import { Produto } from '../../../core/models/produto';
 import { AdminService, paraCadastro } from '../../../core/services/admin.service';
+import { PedidoService } from '../../../core/services/pedido.service';
 import { ProdutoFormulario } from './produto-formulario';
+
+type FiltroPedidos = 'andamento' | 'todos' | StatusPedido;
+
+const FINALIZADOS: StatusPedido[] = ['CONCLUIDO', 'CANCELADO'];
 
 const CARGOS: Record<Perfil, string> = {
   DONO: 'Dono',
@@ -23,12 +29,13 @@ const CARGOS: Record<Perfil, string> = {
 
 @Component({
   selector: 'app-painel',
-  imports: [CurrencyPipe, ReactiveFormsModule, ProdutoFormulario],
+  imports: [CurrencyPipe, DatePipe, ReactiveFormsModule, ProdutoFormulario],
   templateUrl: './painel.html',
   styleUrl: './painel.css'
 })
 export class Painel {
   private readonly admin = inject(AdminService);
+  private readonly pedidosApi = inject(PedidoService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -37,7 +44,7 @@ export class Painel {
   readonly sessao = this.auth.sessao;
   readonly cargo = computed(() => CARGOS[this.sessao()?.perfil ?? 'DONO']);
 
-  readonly aba = signal<'produtos' | 'categorias'>('produtos');
+  readonly aba = signal<'produtos' | 'categorias' | 'pedidos'>('produtos');
   readonly produtos = signal<Produto[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly carregando = signal(true);
@@ -84,6 +91,27 @@ export class Painel {
     const uso: Record<number, number | undefined> = {};
     for (const p of this.produtos()) uso[p.categoria.id] = (uso[p.categoria.id] ?? 0) + 1;
     return uso;
+  });
+
+  readonly pedidos = signal<Pedido[]>([]);
+  readonly pedidosCarregados = signal(false);
+  readonly carregandoPedidos = signal(false);
+  readonly erroPedidos = signal<string | null>(null);
+  readonly filtroPedidos = signal<FiltroPedidos>('andamento');
+  readonly ocupadoPedido = signal<number | null>(null);
+  readonly cancelandoPedido = signal<number | null>(null);
+  readonly estorno = signal(100);
+  readonly rotuloStatus = STATUS_PEDIDO;
+  readonly corStatus = COR_STATUS;
+  readonly opcoesStatus = Object.entries(STATUS_PEDIDO) as [StatusPedido, string][];
+
+  readonly pedidosEmAndamento = computed(() => this.pedidos().filter(p => !FINALIZADOS.includes(p.status)).length);
+
+  readonly pedidosFiltrados = computed(() => {
+    const filtro = this.filtroPedidos();
+    return this.pedidos().filter(p =>
+      filtro === 'todos' ? true : filtro === 'andamento' ? !FINALIZADOS.includes(p.status) : p.status === filtro
+    );
   });
 
   readonly produtoEmEdicao = computed(() => {
@@ -230,6 +258,86 @@ export class Painel {
       });
   }
 
+  abrirPedidos(): void {
+    this.aba.set('pedidos');
+    if (!this.pedidosCarregados()) this.carregarPedidos();
+  }
+
+  carregarPedidos(): void {
+    this.carregandoPedidos.set(true);
+    this.erroPedidos.set(null);
+    this.pedidosApi
+      .todos()
+      .pipe(finalize(() => this.carregandoPedidos.set(false)))
+      .subscribe({
+        next: lista => {
+          this.pedidos.set(lista);
+          this.pedidosCarregados.set(true);
+        },
+        error: e => this.erroPedidos.set(mensagemDeErro(e, 'Não foi possível carregar os pedidos.'))
+      });
+  }
+
+  filtrarPedidos(evento: Event): void {
+    this.filtroPedidos.set((evento.target as HTMLSelectElement).value as FiltroPedidos);
+  }
+
+  proximo(p: Pedido): StatusPedido | null {
+    return proximoStatus(p);
+  }
+
+  finalizado(p: Pedido): boolean {
+    return FINALIZADOS.includes(p.status);
+  }
+
+  resumoItens(p: Pedido): string {
+    return p.itens.map(item => `${item.quantidade}× ${item.produtoNome}`).join(', ');
+  }
+
+  avancarPedido(p: Pedido): void {
+    const novo = proximoStatus(p);
+    if (!novo || this.ocupadoPedido()) return;
+    this.ocupadoPedido.set(p.id);
+    this.erroPedidos.set(null);
+    this.pedidosApi
+      .alterarStatus(p.id, novo)
+      .pipe(finalize(() => this.ocupadoPedido.set(null)))
+      .subscribe({
+        next: atualizado => {
+          this.substituirPedido(atualizado);
+          this.mostrarAviso(`Pedido #${p.id}: ${STATUS_PEDIDO[atualizado.status]}.`);
+        },
+        error: e => this.erroPedidos.set(mensagemDeErro(e))
+      });
+  }
+
+  iniciarCancelamento(p: Pedido): void {
+    this.cancelandoPedido.set(p.id);
+    this.estorno.set(100);
+  }
+
+  atualizarEstorno(evento: Event): void {
+    const valor = Number((evento.target as HTMLInputElement).value);
+    this.estorno.set(Math.max(0, Math.min(100, Number.isFinite(valor) ? Math.round(valor) : 0)));
+  }
+
+  confirmarCancelamentoPedido(p: Pedido): void {
+    if (this.ocupadoPedido()) return;
+    this.ocupadoPedido.set(p.id);
+    this.erroPedidos.set(null);
+    this.pedidosApi
+      .cancelarComoLoja(p.id, this.estorno())
+      .pipe(finalize(() => this.ocupadoPedido.set(null)))
+      .subscribe({
+        next: atualizado => {
+          this.substituirPedido(atualizado);
+          this.cancelandoPedido.set(null);
+          this.mostrarAviso(`Pedido #${p.id} cancelado com estorno de ${this.estorno()}%.`);
+        },
+        error: e => this.erroPedidos.set(mensagemDeErro(e))
+      });
+  }
+
   sair(): void {
     this.auth.sair();
     this.router.navigateByUrl('/');
@@ -237,6 +345,10 @@ export class Painel {
 
   private substituir(p: Produto): void {
     this.produtos.update(lista => lista.map(x => (x.id === p.id ? p : x)));
+  }
+
+  private substituirPedido(p: Pedido): void {
+    this.pedidos.update(lista => lista.map(x => (x.id === p.id ? p : x)));
   }
 
   private mostrarAviso(mensagem: string): void {

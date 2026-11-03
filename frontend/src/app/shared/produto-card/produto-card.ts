@@ -1,8 +1,8 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { imagemDoProduto } from '../../core/imagem-produto';
-import { linkWhatsapp } from '../../core/loja';
 import { Produto } from '../../core/models/produto';
+import { CarrinhoService } from '../../core/services/carrinho.service';
 
 @Component({
   selector: 'app-produto-card',
@@ -17,5 +17,18 @@ export class ProdutoCard {
 
   readonly imagem = computed(() => imagemDoProduto(this.produto()));
 
-  readonly linkPedido = computed(() => linkWhatsapp(`Olá! Quero pedir: ${this.produto().nome}`));
+  private readonly carrinho = inject(CarrinhoService);
+  private timer?: ReturnType<typeof setTimeout>;
+
+  readonly adicionado = signal(false);
+  readonly noCarrinho = computed(() => this.carrinho.quantidadeDe(this.produto().id));
+  readonly limiteAtingido = computed(() => this.noCarrinho() >= this.produto().estoqueQuantidade);
+
+  adicionar(): void {
+    if (this.limiteAtingido()) return;
+    this.carrinho.adicionar(this.produto());
+    this.adicionado.set(true);
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.adicionado.set(false), 1600);
+  }
 }

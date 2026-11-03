@@ -406,3 +406,29 @@
     right: 16px;
   }
 }
+
+.itens-resumo {
+  max-width: 260px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cancelamento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.cancelamento input {
+  width: 64px;
+  margin: 0 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--text);
+  font: inherit;
+}

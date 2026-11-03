@@ -1,0 +1,173 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">Seu pedido</span>
+    <h1 class="gothic">Pedido #{{ id() }}</h1>
+    @if (pedido(); as p) {
+      <p class="caps">Feito em {{ p.criadoEm | date: "dd/MM/yyyy 'às' HH:mm" }}</p>
+    }
+  </div>
+</section>
+
+<section class="container corpo">
+  <a routerLink="/pedidos" class="voltar"><i class="bi bi-arrow-left"></i> Meus pedidos</a>
+
+  @if (erro()) {
+    <p class="alerta erro" role="alert">
+      <i class="bi bi-exclamation-octagon"></i>
+      <span>{{ erro() }} <button type="button" class="btn-link" (click)="carregar()">Tentar de novo</button></span>
+    </p>
+  }
+
+  @if (carregando() && !pedido()) {
+    <div class="cartao carregando">Carregando pedido…</div>
+  } @else if (pedido()) {
+    @let p = pedido()!;
+    @if (etapas().length) {
+      <ol class="etapas" aria-label="Andamento do pedido">
+        @for (e of etapas(); track e.rotulo) {
+          <li [class.feita]="e.feita" [class.atual]="e.atual">
+            <span class="ponto"><i class="bi bi-check-lg"></i></span>
+            <span class="nome">{{ e.rotulo }}</span>
+          </li>
+        }
+      </ol>
+    }
+
+    <div class="grade">
+      <div class="cartao">
+        <div class="cabecalho">
+          <h2 class="cartao-titulo">Itens</h2>
+          <span [class]="'selo-mini ' + cor[p.status]" data-status>{{ rotulo[p.status] }}</span>
+        </div>
+        <ul class="itens-pedido">
+          @for (item of p.itens; track item.produtoId) {
+            <li>
+              <span class="qtd-item">{{ item.quantidade }}×</span>
+              <span class="nome-item">
+                {{ item.produtoNome }}
+                @if (item.combo) {
+                  <span class="selo-mini">{{ item.combo }}</span>
+                }
+              </span>
+              <span class="preco-item">{{ item.precoUnitario * item.quantidade - item.descontoAplicado | currency: 'BRL' }}</span>
+            </li>
+          }
+        </ul>
+
+        <div class="linhas">
+          <div><span>Produtos</span><strong>{{ p.subtotal | currency: 'BRL' }}</strong></div>
+          @if (p.descontoTotal > 0) {
+            <div class="desc"><span>Descontos</span><strong>− {{ p.descontoTotal | currency: 'BRL' }}</strong></div>
+          }
+          @if (p.tipoEntrega === 'DELIVERY') {
+            <div><span>Entrega</span><strong>{{ p.taxaEntrega | currency: 'BRL' }}</strong></div>
+          }
+          <div class="total"><span>Total</span><strong>{{ p.total | currency: 'BRL' }}</strong></div>
+        </div>
+
+        <div class="recebimento">
+          @if (p.tipoEntrega === 'DELIVERY' && p.enderecoEntrega; as e) {
+            <i class="bi bi-truck"></i>
+            <span>Entrega em {{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' · ' + e.complemento : '' }} · {{ e.bairro }}, {{ e.cidade }}/{{ e.uf }}</span>
+          } @else {
+            <i class="bi bi-shop"></i>
+            <span>Retirada na loja</span>
+          }
+        </div>
+
+        @if (p.pagamentos.length) {
+          <h3 class="subtitulo">Pagamentos</h3>
+          <ul class="pagamentos">
+            @for (pg of p.pagamentos; track pg.id) {
+              <li>
+                <span>{{ rotuloForma[pg.forma] }}</span>
+                <span class="quando">{{ pg.criadoEm | date: 'dd/MM HH:mm' }}</span>
+                <span class="valor-pg">{{ pg.valor | currency: 'BRL' }}</span>
+                <span
+                  class="selo-mini"
+                  [class.verde]="pg.status === 'APROVADO'"
+                  [class.vermelho]="pg.status === 'RECUSADO'"
+                  [class.cinza]="pg.status === 'PENDENTE' || pg.status === 'ESTORNADO'">
+                  {{ rotuloPagamento[pg.status] }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <aside class="cartao acao">
+        @if (mensagem(); as m) {
+          <p class="alerta" [class.ok]="m.tipo === 'ok'" [class.erro]="m.tipo === 'erro'" role="status">
+            <i class="bi" [class.bi-check-circle]="m.tipo === 'ok'" [class.bi-exclamation-octagon]="m.tipo === 'erro'"></i>
+            {{ m.texto }}
+          </p>
+        }
+
+        @if (pixPendente(); as pix) {
+          <h2 class="cartao-titulo">Pague com Pix</h2>
+          <p class="nota">Copie o código abaixo no app do seu banco. Valor: <strong>{{ pix.valor | currency: 'BRL' }}</strong></p>
+          <code class="pix">{{ pix.pixCopiaECola }}</code>
+          <button type="button" class="btn btn-outline btn-sm" (click)="copiarPix(pix.pixCopiaECola ?? '')">
+            <i class="bi" [class.bi-clipboard]="!copiado()" [class.bi-clipboard-check]="copiado()"></i>
+            {{ copiado() ? 'Copiado' : 'Copiar código' }}
+          </button>
+          <button type="button" class="btn btn-primary largo" (click)="confirmarPix()" [disabled]="confirmandoPix()">
+            {{ confirmandoPix() ? 'Confirmando…' : 'Já paguei' }}
+          </button>
+          <p class="nota pequena">Ambiente de teste: “Já paguei” simula a confirmação do banco.</p>
+        } @else if (podePagar()) {
+          <h2 class="cartao-titulo">Pagamento</h2>
+          <fieldset class="formas">
+            <legend class="sr-only">Forma de pagamento</legend>
+            @for (f of formas; track f[0]) {
+              <label class="opcao" [class.marcada]="forma() === f[0]">
+                <input type="radio" name="forma" [checked]="forma() === f[0]" (change)="forma.set(f[0])" />
+                <i class="bi" [class]="'bi ' + icones[f[0]]"></i> {{ f[1] }}
+              </label>
+            }
+          </fieldset>
+          @if (cartao()) {
+            <label class="check teste">
+              <input type="checkbox" [checked]="simularRecusa()" (change)="simularRecusa.set(!simularRecusa())" />
+              Simular cartão recusado (teste)
+            </label>
+          }
+          @if (forma() === 'DINHEIRO') {
+            <p class="nota">Você paga em dinheiro na {{ p.tipoEntrega === 'DELIVERY' ? 'entrega' : 'retirada' }}.</p>
+          }
+          <button type="button" class="btn btn-primary largo" (click)="pagar()" [disabled]="pagando()">
+            {{ pagando() ? 'Processando…' : 'Pagar ' + (p.total | currency: 'BRL') }}
+          </button>
+        } @else if (p.status === 'CANCELADO') {
+          <h2 class="cartao-titulo">Pedido cancelado</h2>
+          <p class="nota">Se você já tinha pago, o estorno aparece na lista de pagamentos.</p>
+          <a routerLink="/produtos" class="btn btn-outline btn-sm">Fazer outro pedido</a>
+        } @else if (p.status === 'CONCLUIDO') {
+          <h2 class="cartao-titulo">Pedido concluído</h2>
+          <p class="nota">Obrigado pela compra! Volte sempre.</p>
+          <a routerLink="/produtos" class="btn btn-outline btn-sm">Comprar de novo</a>
+        } @else {
+          <h2 class="cartao-titulo">Pagamento aprovado</h2>
+          <p class="nota">
+            A loja já recebeu seu pedido.
+            {{ p.tipoEntrega === 'DELIVERY' ? 'Você acompanha a entrega por aqui.' : 'Avisamos quando estiver pronto para retirar.' }}
+          </p>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="carregar()"><i class="bi bi-arrow-clockwise"></i> Atualizar status</button>
+        }
+
+        @if (podeCancelar()) {
+          <button
+            type="button"
+            class="btn btn-sm cancelar"
+            [class.btn-ghost]="!confirmarCancelamento()"
+            [class.btn-perigo]="confirmarCancelamento()"
+            (click)="cancelar()"
+            [disabled]="cancelando()">
+            <i class="bi bi-x-circle"></i> {{ confirmarCancelamento() ? 'Confirmar cancelamento' : 'Cancelar pedido' }}
+          </button>
+        }
+      </aside>
+    </div>
+  }
+</section>

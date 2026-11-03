@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { AvisosService } from '../avisos.service';
 import { AuthService } from './auth.service';
 
-const AREA_RESTRITA = /^\/(minha-conta|admin(?!\/entrar))(\/|\?|$)/;
+const AREA_RESTRITA = /^\/(minha-conta|pedidos|admin(?!\/entrar))(\/|\?|$)/;
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);

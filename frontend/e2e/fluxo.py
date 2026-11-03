@@ -11,6 +11,7 @@ BASE = os.environ.get("E2E_BASE", "http://127.0.0.1:4200")
 MOCK = os.environ.get("E2E_MOCK")
 MINIMO_PRODUTOS = int(os.environ.get("E2E_MINIMO_PRODUTOS", "10"))
 SENHA_DONO = os.environ.get("E2E_SENHA_DONO", "admin123")
+COMPRA = {}
 
 
 def cpf_valido():
@@ -84,6 +85,33 @@ def cliente(navegador, erros):
     expect(pg.get_by_text("Praça da Sé, 100")).to_be_visible()
     print("cliente: cadastro, endereço, logout e login ok")
 
+    pg.goto(BASE + "/produtos")
+    card = pg.locator("app-produto-card").filter(has=pg.get_by_role("button", name="Adicionar")).first
+    produto = card.locator("h3").inner_text().strip()
+    card.get_by_role("button", name="Adicionar").click()
+    expect(pg.locator(".sacola .contador")).to_have_text("1")
+    pg.reload()
+    expect(pg.locator(".sacola .contador")).to_have_text("1")
+    pg.locator("a.sacola").click()
+    pg.wait_for_url("**/carrinho")
+    expect(pg.locator(".item", has_text=produto)).to_be_visible()
+    pg.locator(".opcao", has_text="Retirar na loja").click()
+    finalizar = pg.get_by_role("button", name="Ir para o pagamento")
+    expect(finalizar).to_be_enabled(timeout=15000)
+    finalizar.click()
+    pg.wait_for_url(re.compile(r".*/pedidos/\d+$"))
+    expect(pg.locator("[data-status]")).to_have_text("Aguardando pagamento")
+    pg.locator(".formas .opcao", has_text="Pix").click()
+    pg.get_by_role("button", name=re.compile(r"^Pagar")).click()
+    expect(pg.locator("code.pix")).to_be_visible()
+    pg.get_by_role("button", name="Já paguei").click()
+    expect(pg.locator("[data-status]")).to_have_text("Pago")
+    expect(pg.locator(".sacola .contador")).to_have_count(0)
+    COMPRA["cliente"] = f"Cliente E2E {sufixo}"
+    pg.goto(BASE + "/pedidos")
+    expect(pg.locator(".linha-pedido").first).to_contain_text("Pago")
+    print("cliente: carrinho, retirada, pedido, Pix e Meus pedidos ok")
+
 
 def dono(navegador, erros):
     pg = contexto(navegador).new_page()
@@ -127,11 +155,22 @@ def dono(navegador, erros):
     bebidas.get_by_role("button", name="Confirmar exclusão").click()
     expect(pg.locator(".alerta.erro")).to_contain_text("tem produtos cadastrados")
 
+    pg.get_by_role("tab", name="Pedidos").click()
+    pedido = pg.locator(".tabela tbody tr", has_text=COMPRA["cliente"])
+    expect(pedido).to_be_visible()
+    expect(pedido.locator(".selo-mini")).to_have_text("Pago")
+    pedido.get_by_role("button", name="Em separação").click()
+    expect(pedido.locator(".selo-mini")).to_have_text("Em separação")
+    pedido.get_by_role("button", name="Concluído").click()
+    expect(pg.locator(".toast")).to_contain_text("Concluído")
+    pg.locator("select.filtro").select_option("todos")
+    expect(pedido.locator(".selo-mini")).to_have_text("Concluído")
+
     vitrine = contexto(navegador).new_page()
     vitrine.goto(BASE + "/produtos")
     expect(vitrine.get_by_text(nome)).to_be_visible()
     expect(vitrine.get_by_text("exibindo dados de exemplo")).to_have_count(0)
-    print("dono: login, produto, estoque, edição, categoria e vitrine ok")
+    print("dono: login, produto, estoque, edição, categoria, pedidos e vitrine ok")
 
 
 def tratamento_de_erros(navegador, erros):
