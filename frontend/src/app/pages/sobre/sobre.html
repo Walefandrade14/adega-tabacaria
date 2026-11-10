@@ -1,0 +1,36 @@
+<section class="banner">
+  <img src="img/loja.jpg" alt="" />
+  <div class="container conteudo">
+    <span class="eyebrow ruled">Sobre nós</span>
+    <h1 class="gothic">Tradição, sabor e boa companhia</h1>
+  </div>
+</section>
+
+<section class="container historia">
+  <div class="texto">
+    <p>
+      A <strong>LouD Feliz no Simples</strong> é a adega e tabacaria da Av. Hamilton para quem gosta de
+      aproveitar o momento sem complicação. Reunimos bebidas selecionadas, tabacos, narguilé e acessórios
+      em um só lugar, com atendimento próximo e preço justo.
+    </p>
+    <p>
+      Seja para abastecer a resenha, montar um combo ou escolher um presente, a gente te ajuda a
+      encontrar o que combina com a sua noite.
+    </p>
+    <a routerLink="/produtos" class="btn btn-primary">Ver produtos <i class="bi bi-arrow-right"></i></a>
+  </div>
+
+  <ul class="destaques">
+    @for (d of destaques; track d.titulo) {
+      <li>
+        <i class="bi {{ d.icone }}"></i>
+        <div>
+          <h3 class="gothic">{{ d.titulo }}</h3>
+          <p>{{ d.texto }}</p>
+        </div>
+      </li>
+    }
+  </ul>
+</section>
+
+<app-loja-info />

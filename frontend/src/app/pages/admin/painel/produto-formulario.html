@@ -1,0 +1,93 @@
+<div class="fundo" (click)="fechar.emit()">
+  <form class="janela" role="dialog" aria-modal="true" aria-labelledby="titulo-produto" [formGroup]="form" (ngSubmit)="salvar()" (click)="$event.stopPropagation()" novalidate>
+    <header>
+      <h2 id="titulo-produto" class="gothic">{{ produto() ? 'Editar produto' : 'Novo produto' }}</h2>
+      <button type="button" class="fechar" (click)="fechar.emit()" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+    </header>
+
+    <div class="conteudo">
+      @if (erro()) {
+        <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erro() }}</p>
+      }
+
+      <div class="form-grid">
+        <label class="campo inteiro">
+          <span>Nome</span>
+          <input #primeiro type="text" formControlName="nome" placeholder="Ex.: Gin 750ml" [class.erro]="invalido('nome')" />
+          @if (invalido('nome')) {
+            <small>Informe o nome do produto.</small>
+          }
+        </label>
+
+        <label class="campo">
+          <span>Categoria</span>
+          <select formControlName="categoriaId" [class.erro]="invalido('categoriaId')">
+            @for (c of categorias(); track c.id) {
+              <option [ngValue]="c.id">{{ c.nome }}</option>
+            }
+          </select>
+          @if (invalido('categoriaId')) {
+            <small>Escolha uma categoria.</small>
+          }
+        </label>
+
+        <label class="campo">
+          <span>Preço (R$)</span>
+          <input type="number" inputmode="decimal" min="0.01" step="0.01" formControlName="preco" placeholder="0,00" [class.erro]="invalido('preco')" />
+          @if (invalido('preco')) {
+            <small>Informe um preço maior que zero.</small>
+          }
+        </label>
+
+        <label class="campo">
+          <span>Estoque</span>
+          <input type="number" inputmode="numeric" min="0" step="1" formControlName="estoqueQuantidade" [class.erro]="invalido('estoqueQuantidade')" />
+          @if (invalido('estoqueQuantidade')) {
+            <small>O estoque não pode ser negativo.</small>
+          }
+        </label>
+
+        <label class="campo">
+          <span>Imagem <em>(URL, opcional)</em></span>
+          <input type="url" formControlName="imagemUrl" placeholder="https://…" [class.erro]="invalido('imagemUrl')" />
+          @if (invalido('imagemUrl')) {
+            <small>Use um endereço começando com https://</small>
+          }
+        </label>
+
+        <label class="campo inteiro">
+          <span>Descrição <em>(opcional)</em></span>
+          <textarea rows="3" formControlName="descricao" placeholder="Detalhes que ajudam o cliente a escolher"></textarea>
+        </label>
+
+        <div class="opcoes inteiro">
+          <label class="check">
+            <input type="checkbox" formControlName="restritoMaiorIdade" />
+            <span><strong>Venda só para maiores de 18</strong><small>Bebida alcoólica, essência, cigarro ou carvão</small></span>
+          </label>
+          <label class="check">
+            <input type="checkbox" formControlName="ofertaEspecial" />
+            <span><strong>Oferta especial</strong><small>Limite de compra por CPF por dia</small></span>
+          </label>
+          @if (form.controls.ofertaEspecial.value) {
+            <label class="campo limite">
+              <span>Limite por dia</span>
+              <input type="number" min="1" step="1" formControlName="limiteDiarioOferta" placeholder="Padrão: 3" [class.erro]="invalido('limiteDiarioOferta')" />
+            </label>
+          }
+          <label class="check">
+            <input type="checkbox" formControlName="ativo" />
+            <span><strong>Ativo no catálogo</strong><small>Desmarque para esconder sem apagar</small></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <button type="button" class="btn btn-ghost" (click)="fechar.emit()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando…' : produto() ? 'Salvar alterações' : 'Cadastrar produto' }}
+      </button>
+    </footer>
+  </form>
+</div>

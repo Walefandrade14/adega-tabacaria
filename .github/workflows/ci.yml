@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main, backend]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (Spring Boot + MySQL)
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Testes
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/adega_tabacaria_test?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+        run: |
+          set -o pipefail
+          ./mvnw -B -ntp verify 2>&1 | tee build.log
+      - name: Erros do build
+        if: failure()
+        run: python3 ../.github/scripts/anotar_erros.py build.log target/surefire-reports
+      - name: Imagem Docker
+        run: docker build -t loud-feliz-api .
+      - name: Smoke test da imagem
+        run: |
+          docker run -d --name api --network host \
+            -e DATABASE_URL="mysql://root:root@127.0.0.1:3306/qualquer" \
+            -e DB_NAME=adega_smoke -e ADMIN_PASSWORD=smoke123 -e JWT_SECRET=segredo-de-ci \
+            loud-feliz-api
+          for i in $(seq 1 60); do curl -fs http://localhost:8080/actuator/health && break; sleep 3; done
+          curl -fs http://localhost:8080/api/produtos | python3 -c "import json,sys; d=json.load(sys.stdin); assert len(d) >= 10, d; print(len(d), 'produtos')"
+          TOKEN=$(curl -fs -X POST http://localhost:8080/api/auth/funcionarios/login -H 'Content-Type: application/json' \
+            -d '{"usuario":"dono","senha":"smoke123"}' | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])")
+          curl -fs http://localhost:8080/api/admin/pedidos -H "Authorization: Bearer $TOKEN"
+          curl -fs http://localhost:8080/v3/api-docs > /dev/null
+          curl -fs -o /dev/null http://localhost:8080/swagger-ui/index.html
+          curl -fs -H "Origin: https://loud-feliz-web.onrender.com" -I http://localhost:8080/api/produtos | grep -i "access-control-allow-origin" || true
+          echo "::notice title=memoria da API::$(docker stats --no-stream --format "{{.MemUsage}}" api)"
+      - name: Logs do container
+        if: failure()
+        run: docker logs api 2>&1 | python3 ../.github/scripts/anotar_erros.py -
+
+  frontend:
+    name: Frontend (Angular 19)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - name: Build de produção
+        run: |
+          set -o pipefail
+          API_URL=https://loud-feliz-api.onrender.com/api node scripts/definir-api.mjs
+          npm run build 2>&1 | tee build.log
+      - name: Erros do build
+        if: failure()
+        run: python3 ../.github/scripts/anotar_erros.py - < build.log
+
+  e2e:
+    name: E2E (site + API + MySQL)
+    runs-on: ubuntu-24.04
+    needs: [backend, frontend]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Subir a API
+        working-directory: backend
+        env:
+          DB_URL: jdbc:mysql://127.0.0.1:3306/adega_e2e?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+          CORS_ORIGINS: http://127.0.0.1:4200,http://localhost:4200
+        run: |
+          ./mvnw -B -ntp -q package -DskipTests
+          nohup java -jar target/loud-feliz-api.jar > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -fs http://localhost:8080/actuator/health && break; sleep 3; done
+      - name: Subir o site apontando para a API local
+        working-directory: frontend
+        run: |
+          npm ci --legacy-peer-deps
+          API_URL=http://localhost:8080/api node scripts/definir-api.mjs
+          npm run build
+          nohup python3 ../.github/scripts/servir_spa.py dist/loud-feliz-web/browser 4200 > /dev/null 2>&1 &
+          sleep 1
+          curl -fs http://127.0.0.1:4200/cadastro > /dev/null
+      - name: Testes de ponta a ponta
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install -q playwright==1.56.0
+          python -m playwright install --with-deps chromium > /dev/null
+          python frontend/e2e/fluxo.py
+      - name: Logs da API
+        if: failure()
+        run: python3 .github/scripts/anotar_erros.py - < backend/api.log
+
+  vm:
+    name: Deploy em VM (Docker Compose + Caddy)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Subir com o instalar.sh
+        run: sudo bash deploy/vm/instalar.sh 127.0.0.1
+      - name: Conferir pelo proxy
+        run: |
+          curl -fsS http://localhost/ | grep -q "<app-root"
+          curl -fsS http://localhost/rota-inexistente | grep -q "<app-root"
+          curl -fsS http://localhost/api/produtos | python3 -c "import json, sys; assert len(json.load(sys.stdin)) > 0"
+          curl -fsSL -o /dev/null http://localhost/swagger-ui.html
+          curl -fsSI http://localhost/ | grep -qi "x-content-type-options"
+      - name: E2E contra a stack da VM
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install -q playwright==1.56.0
+          python -m playwright install --with-deps chromium > /dev/null
+          E2E_BASE=http://localhost E2E_SENHA_DONO="$(sudo grep '^ADMIN_PASSWORD=' deploy/vm/.env | cut -d= -f2)" python frontend/e2e/fluxo.py
+      - name: Logs dos containers
+        if: failure()
+        run: |
+          sudo docker compose -f deploy/vm/docker-compose.yml logs --no-color > vm.log 2>&1 || true
+          python3 .github/scripts/anotar_erros.py - < vm.log

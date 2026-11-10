@@ -1,0 +1,1 @@
+ALTER TABLE cliente MODIFY cpf CHAR(11) NULL;

@@ -1,0 +1,52 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">Equipe da loja</span>
+    <h1 class="gothic">Área do funcionário</h1>
+    <p class="caps">Cadastro de produtos, categorias e estoque</p>
+  </div>
+</section>
+
+<section class="container corpo">
+  <form class="cartao form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    @if (erro()) {
+      <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erro() }}</p>
+    }
+
+    <label class="campo">
+      <span>Usuário</span>
+      <input type="text" formControlName="usuario" autocomplete="username" autocapitalize="none" [class.erro]="invalido('usuario')" />
+      @if (invalido('usuario')) {
+        <small>Informe o usuário.</small>
+      }
+    </label>
+
+    <label class="campo">
+      <span>Senha</span>
+      <div class="senha">
+        <input [type]="verSenha() ? 'text' : 'password'" formControlName="senha" autocomplete="current-password" [class.erro]="invalido('senha')" />
+        <button type="button" class="olho" (click)="verSenha.set(!verSenha())" [attr.aria-label]="verSenha() ? 'Esconder senha' : 'Mostrar senha'">
+          <i class="bi" [class.bi-eye]="!verSenha()" [class.bi-eye-slash]="verSenha()"></i>
+        </button>
+      </div>
+      @if (invalido('senha')) {
+        <small>Informe a senha.</small>
+      }
+    </label>
+
+    <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+      @if (enviando()) {
+        Entrando…
+      } @else {
+        Acessar painel <i class="bi bi-arrow-right"></i>
+      }
+    </button>
+
+    @if (lento()) {
+      <p class="lento"><i class="bi bi-hourglass-split"></i> O servidor gratuito está acordando. Pode levar até 1 minuto.</p>
+    }
+  </form>
+
+  <p class="funcionario">
+    É cliente? <a routerLink="/entrar" class="link-ouro">Entre na sua conta</a>
+  </p>
+</section>

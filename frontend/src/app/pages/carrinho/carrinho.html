@@ -1,0 +1,166 @@
+<section class="page-top">
+  <div class="container">
+    <span class="eyebrow ruled">Seu pedido</span>
+    <h1 class="gothic">Carrinho</h1>
+    <p class="caps">Confira os itens, escolha como receber e finalize</p>
+  </div>
+</section>
+
+<section class="container corpo">
+  @if (!carrinho.itens().length) {
+    <div class="cartao vazio">
+      <i class="bi bi-bag"></i>
+      <h2>Seu carrinho está vazio</h2>
+      <p>Escolha bebidas, tabacaria e acessórios na vitrine.</p>
+      <a routerLink="/produtos" class="btn btn-primary">Ver produtos <i class="bi bi-arrow-right"></i></a>
+    </div>
+  } @else {
+    <div class="grade">
+      <div class="cartao itens">
+        <div class="cabecalho">
+          <h2 class="cartao-titulo">Itens</h2>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="carrinho.limpar()"><i class="bi bi-trash3"></i> Esvaziar</button>
+        </div>
+
+        <ul class="lista">
+          @for (item of carrinho.itens(); track item.produto.id) {
+            @let calculada = linha(item.produto.id);
+            <li class="item">
+              <img [src]="imagem(item.produto)" alt="" />
+              <div class="info">
+                <strong>{{ item.produto.nome }}</strong>
+                <span class="meta">
+                  {{ item.produto.preco | currency: 'BRL' }} cada
+                  @if (item.produto.restritoMaiorIdade) {
+                    <span class="selo-mini vermelho">+18</span>
+                  }
+                  @if (calculada?.combo) {
+                    <span class="selo-mini">{{ calculada?.combo }}</span>
+                  }
+                </span>
+              </div>
+              <div class="qtd">
+                <button type="button" (click)="alterar(item, -1)" [attr.aria-label]="'Tirar 1 de ' + item.produto.nome">
+                  <i class="bi bi-dash"></i>
+                </button>
+                <span>{{ item.quantidade }}</span>
+                <button
+                  type="button"
+                  (click)="alterar(item, 1)"
+                  [disabled]="item.quantidade >= item.produto.estoqueQuantidade"
+                  [attr.aria-label]="'Somar 1 a ' + item.produto.nome">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              <div class="valor">
+                <strong>{{ (calculada?.total ?? item.produto.preco * item.quantidade) | currency: 'BRL' }}</strong>
+                @if (calculada && calculada.desconto > 0) {
+                  <span class="desconto">− {{ calculada.desconto | currency: 'BRL' }}</span>
+                }
+              </div>
+              <button type="button" class="remover" (click)="carrinho.remover(item.produto.id)" [attr.aria-label]="'Remover ' + item.produto.nome">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <aside class="cartao resumo">
+        <h2 class="cartao-titulo">Resumo</h2>
+
+        @if (auth.funcionario()) {
+          <p class="alerta"><i class="bi bi-info-circle"></i> Para comprar, entre com uma conta de cliente.</p>
+        } @else if (!auth.cliente()) {
+          <div class="linhas">
+            <div class="total">
+              <span>Produtos</span><strong>{{ carrinho.valorProdutos() | currency: 'BRL' }}</strong>
+            </div>
+          </div>
+          <p class="nota">Entre na sua conta para calcular a entrega e finalizar o pedido.</p>
+          <a routerLink="/entrar" [queryParams]="{ voltar: '/carrinho' }" class="btn btn-primary finalizar">Entrar para finalizar</a>
+          <a routerLink="/cadastro" class="btn btn-ghost btn-sm">Ainda não tenho conta</a>
+        } @else {
+          <fieldset class="entrega">
+            <legend>Como quer receber?</legend>
+            <label class="opcao" [class.marcada]="tipoEntrega() === 'DELIVERY'">
+              <input type="radio" name="tipo-entrega" [checked]="tipoEntrega() === 'DELIVERY'" (change)="tipoEntrega.set('DELIVERY')" />
+              <i class="bi bi-truck"></i> Entrega
+            </label>
+            <label class="opcao" [class.marcada]="tipoEntrega() === 'RETIRADA'">
+              <input type="radio" name="tipo-entrega" [checked]="tipoEntrega() === 'RETIRADA'" (change)="tipoEntrega.set('RETIRADA')" />
+              <i class="bi bi-shop"></i> Retirar na loja
+            </label>
+          </fieldset>
+
+          @if (tipoEntrega() === 'DELIVERY') {
+            @if (enderecos().length) {
+              <label class="campo">
+                <span>Endereço de entrega</span>
+                <select (change)="escolherEndereco($event)" aria-label="Endereço de entrega">
+                  @for (e of enderecos(); track e.id) {
+                    <option [value]="e.id" [selected]="e.id === enderecoId()">
+                      {{ e.apelido ? e.apelido + ' · ' : '' }}{{ e.logradouro }}, {{ e.numero }} · {{ e.bairro }}
+                    </option>
+                  }
+                </select>
+              </label>
+            } @else if (!carregandoEnderecos()) {
+              <p class="alerta">
+                <i class="bi bi-geo-alt"></i>
+                <span>Cadastre um endereço em <a routerLink="/minha-conta" class="link-ouro">Minha conta</a> para receber em casa.</span>
+              </p>
+            }
+          }
+
+          @let c = calculo();
+          <div class="linhas" [class.calculando]="simulando()">
+            <div>
+              <span>Produtos</span><strong>{{ (c?.subtotal ?? carrinho.valorProdutos()) | currency: 'BRL' }}</strong>
+            </div>
+            @if (c && c.descontoTotal > 0) {
+              <div class="desc">
+                <span>Descontos</span><strong>− {{ c.descontoTotal | currency: 'BRL' }}</strong>
+              </div>
+            }
+            @if (tipoEntrega() === 'DELIVERY') {
+              <div>
+                <span>Entrega</span><strong>{{ c ? (c.taxaEntrega | currency: 'BRL') : '—' }}</strong>
+              </div>
+            }
+            <div class="total">
+              <span>Total</span><strong>{{ c ? (c.total | currency: 'BRL') : '—' }}</strong>
+            </div>
+          </div>
+
+          @if (c?.problemas?.length) {
+            <ul class="problemas" role="alert">
+              @for (p of c!.problemas; track $index) {
+                <li>
+                  <span class="regra">{{ p.regra }}</span> {{ p.mensagem }}
+                  @if (p.mensagem.includes('Cadastre seu CPF')) {
+                    <a routerLink="/minha-conta" class="link-cpf">Cadastrar CPF</a>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (erro()) {
+            <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erro() }}</p>
+          }
+
+          <button type="button" class="btn btn-primary finalizar" [disabled]="!podeFinalizar()" (click)="finalizar()">
+            @if (finalizando()) {
+              Criando pedido…
+            } @else if (simulando()) {
+              Calculando…
+            } @else {
+              Ir para o pagamento <i class="bi bi-arrow-right"></i>
+            }
+          </button>
+        }
+      </aside>
+    </div>
+  }
+</section>

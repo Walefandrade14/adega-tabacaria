@@ -1,0 +1,423 @@
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 32px;
+  padding-bottom: 72px;
+}
+
+.corpo.estreito {
+  max-width: 900px;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.voltar:hover {
+  color: var(--text);
+}
+
+.carregando {
+  color: var(--muted);
+}
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 56px 24px;
+  text-align: center;
+}
+
+.vazio > .bi {
+  font-size: 40px;
+  color: var(--gold);
+}
+
+.vazio h2 {
+  font-size: 20px;
+}
+
+.lista-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linha-pedido {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto auto 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  transition: border-color 0.2s;
+}
+
+.linha-pedido:hover {
+  border-color: var(--red);
+}
+
+.numero,
+.detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.numero span,
+.detalhe span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.total {
+  font-size: 16px;
+}
+
+.seta {
+  color: var(--gold);
+}
+
+.etapas {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etapas li {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.etapas li::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--gold-20);
+}
+
+.etapas li:first-child::before {
+  display: none;
+}
+
+.etapas li.feita::before {
+  background: var(--red);
+}
+
+.ponto {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--gold-20);
+  border-radius: 999px;
+  background: var(--bg);
+  color: transparent;
+}
+
+.feita .ponto {
+  border-color: var(--red);
+  background: var(--red);
+  color: #fff;
+}
+
+.atual .nome {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.itens-pedido,
+.pagamentos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.itens-pedido li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gold-12);
+  font-size: 14px;
+}
+
+.qtd-item {
+  color: var(--gold);
+}
+
+.nome-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+}
+
+.linhas > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.linhas .desc strong {
+  color: var(--success-light);
+}
+
+.linhas .total {
+  padding-top: 12px;
+  border-top: 1px solid var(--gold-line);
+  font-size: 18px;
+}
+
+.documento {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  background: var(--red-10);
+  font-size: 14px;
+}
+
+.documento .bi {
+  color: var(--red);
+  font-size: 16px;
+}
+
+.recebimento {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--gold-12);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.recebimento .bi {
+  color: var(--gold);
+}
+
+.subtitulo {
+  margin-top: 24px;
+  margin-bottom: 4px;
+  font-family: var(--font-caps);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pagamentos li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gold-12);
+  font-size: 13px;
+}
+
+.quando {
+  color: var(--muted);
+}
+
+.acao {
+  position: sticky;
+  top: 124px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.opcao input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opcao .bi {
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.opcao.marcada {
+  border-color: var(--red);
+  background: var(--red-10);
+}
+
+.opcao:has(input:focus-visible) {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.teste {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.nota {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.nota strong {
+  color: var(--text);
+}
+
+.nota.pequena {
+  font-size: 12px;
+}
+
+.pix {
+  display: block;
+  padding: 12px;
+  border: 1px dashed var(--gold-line);
+  border-radius: 6px;
+  background: var(--bg-2);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-all;
+  color: var(--text);
+}
+
+.aguardando-pix {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--gold-12);
+  border-radius: 6px;
+}
+
+.aguardando-pix .bi {
+  color: var(--gold);
+}
+
+.largo {
+  width: 100%;
+}
+
+.cancelar {
+  align-self: flex-start;
+}
+
+.btn-link {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .grade {
+    grid-template-columns: 1fr;
+  }
+
+  .acao {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .cartao {
+    padding: 20px;
+  }
+
+  .linha-pedido {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .linha-pedido .detalhe,
+  .linha-pedido .seta {
+    display: none;
+  }
+
+  .etapas li {
+    font-size: 11px;
+  }
+
+  .pagamentos li {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .quando {
+    display: none;
+  }
+}

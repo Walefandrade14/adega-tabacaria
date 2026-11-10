@@ -1,0 +1,135 @@
+.loja {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--gold-line);
+  border-bottom: 1px solid var(--gold-line);
+  background: var(--bg-2);
+}
+
+.foto {
+  position: relative;
+  min-height: 340px;
+  border-right: 1px solid var(--gold-line);
+}
+
+.foto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 44px clamp(24px, 4.5vw, 64px);
+  max-width: 560px;
+}
+
+.linha {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.icone {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.endereco {
+  margin-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gold-soft);
+}
+
+.endereco .icone {
+  font-size: 40px;
+}
+
+.endereco h2 {
+  font-size: clamp(30px, 3.6vw, 44px);
+  line-height: 1.1;
+}
+
+.horario {
+  margin-top: 14px;
+}
+
+.horario .icone {
+  font-size: 30px;
+  width: 40px;
+  text-align: center;
+}
+
+.horario p {
+  font-size: clamp(18px, 1.9vw, 23px);
+}
+
+.recado {
+  margin-top: 22px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.btn-whats {
+  margin-top: 18px;
+  min-height: 50px;
+  align-self: flex-start;
+  gap: 32px;
+  padding: 0 22px;
+}
+
+.wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wa .bi {
+  font-size: 22px;
+}
+
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.extras .bi {
+  color: var(--gold);
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.dot {
+  color: var(--text);
+}
+
+@media (max-width: 860px) {
+  .loja {
+    grid-template-columns: 1fr;
+  }
+
+  .foto {
+    min-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid var(--gold-line);
+  }
+
+  .info {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-whats {
+    align-self: stretch;
+  }
+}

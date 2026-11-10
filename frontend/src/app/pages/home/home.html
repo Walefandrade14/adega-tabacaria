@@ -1,0 +1,50 @@
+<section class="hero" aria-labelledby="hero-titulo">
+  <img class="hero-img" src="img/hero.jpg" alt="" fetchpriority="high" />
+
+  <div class="container hero-content">
+    <span class="eyebrow ruled">Adega • Tabacaria • Narguilê • Acessórios</span>
+
+    <h1 id="hero-titulo" class="titulo gothic">
+      <span class="l1">LouD Feliz</span>
+      <span class="l2">
+        <svg viewBox="0 0 44 14" aria-hidden="true"><path d="M43 7H18c-5 0-7-5-11-5-3 0-5 2-5 4.5S4 10 6 10s3-1.5 3-3" /></svg>
+        <span class="no">no</span>
+        <span>Simples</span>
+        <svg class="flip" viewBox="0 0 44 14" aria-hidden="true"><path d="M43 7H18c-5 0-7-5-11-5-3 0-5 2-5 4.5S4 10 6 10s3-1.5 3-3" /></svg>
+      </span>
+    </h1>
+
+    <p class="slogan caps">Boa companhia, grandes momentos, <br />tudo em um só lugar.</p>
+
+    <div class="acoes">
+      <a routerLink="/sobre" class="btn btn-primary">Conheça nosso espaço <i class="bi bi-arrow-right"></i></a>
+      <a routerLink="/produtos" class="btn btn-outline">Ver produtos <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<section class="categorias" aria-labelledby="cat-titulo">
+  <div class="container">
+    <header class="cabecalho">
+      <span class="eyebrow ruled">Nossas categorias</span>
+      <h2 id="cat-titulo" class="gothic">Tudo o que você precisa</h2>
+      <p class="caps">Para aproveitar o melhor da vida</p>
+    </header>
+
+    <div class="grid">
+      @for (cat of categorias; track cat.slug) {
+        <a class="card" routerLink="/produtos" [queryParams]="{ categoria: cat.slug }">
+          <div class="card-img">
+            <img [src]="cat.imagem" [alt]="cat.titulo" loading="lazy" />
+          </div>
+          <app-category-icon class="card-icon" [nome]="cat.slug" />
+          <h3 class="gothic">{{ cat.titulo }}</h3>
+          <p class="caps">{{ cat.descricao }}</p>
+          <i class="bi bi-arrow-right seta"></i>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<app-loja-info />
