@@ -153,7 +153,7 @@ No plano grátis a API dorme após 15 min sem acesso e leva ~1 min para acordar;
    ```bash
    git clone https://github.com/Walefandrade14/adega-tabacaria.git
    cd adega-tabacaria
-   sudo bash deploy/vm/instalar.sh loudfeliz.brazilsouth.cloudapp.azure.com
+   sudo bash deploy/vm/instalar.sh loudfeliz.chilecentral.cloudapp.azure.com
    ```
 
    Sem nome DNS, passe o IP público: o site fica em `http://<IP>`.
@@ -166,4 +166,4 @@ O script instala o Docker, cria swap se a VM tiver pouca memória, gera as senha
 
 Na VM o Pix só é confirmado pela loja (`PAGAMENTO_SIMULADO=false` no `deploy/vm/.env`). Para a demo com o botão "Já paguei", troque para `true` e rode o `instalar.sh` de novo.
 
-A senha do `dono` vale na primeira subida (quando ele é criado); trocar `ADMIN_PASSWORD` depois não muda o usuário que já existe. O CI sobe essa mesma stack com o `instalar.sh` e roda o teste de ponta a ponta contra ela.
+O usuário e a senha do `dono` seguem o `ADMIN_USER` e o `ADMIN_PASSWORD` do `.env`: para trocar, edite lá e rode o `instalar.sh` de novo. O CI sobe essa mesma stack com o `instalar.sh` e roda o teste de ponta a ponta contra ela.
