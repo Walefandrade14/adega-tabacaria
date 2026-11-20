@@ -164,6 +164,8 @@ O script instala o Docker, cria swap se a VM tiver pouca memória, gera as senha
 - Logs: `sudo docker compose -f deploy/vm/docker-compose.yml logs -f api`
 - Backup do banco: `sudo docker compose -f deploy/vm/docker-compose.yml exec db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" adega_tabacaria' > backup.sql`
 
+Na VM o Swagger fica desligado. Para ligar, coloque `SWAGGER=true` no `deploy/vm/.env` e rode o `instalar.sh` de novo.
+
 Na VM o Pix só é confirmado pela loja (`PAGAMENTO_SIMULADO=false` no `deploy/vm/.env`). Para a demo com o botão "Já paguei", troque para `true` e rode o `instalar.sh` de novo.
 
 O usuário e a senha do `dono` seguem o `ADMIN_USER` e o `ADMIN_PASSWORD` do `.env`: para trocar, edite lá e rode o `instalar.sh` de novo. O CI sobe essa mesma stack com o `instalar.sh` e roda o teste de ponta a ponta contra ela.

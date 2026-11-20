@@ -39,6 +39,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?rode o instalar.sh}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
       PAGAMENTO_SIMULADO: ${PAGAMENTO_SIMULADO:-false}
+      SPRINGDOC_APIDOCS_ENABLED: ${SWAGGER:-false}
+      SPRINGDOC_SWAGGERUI_ENABLED: ${SWAGGER:-false}
       SERVER_FORWARD_HEADERS_STRATEGY: framework
       TZ: America/Sao_Paulo
 

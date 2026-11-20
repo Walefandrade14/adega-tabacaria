@@ -106,12 +106,18 @@ else
   fi
 fi
 
+if grep -q '^SWAGGER=true' .env; then
+  swagger="$url/swagger-ui.html"
+else
+  swagger="desligado (SWAGGER=true no .env liga)"
+fi
+
 cat <<EOF
 
 Pronto!
   Site:    $url
   Painel:  $url/admin/entrar   (usuário: $ADMIN_USER   senha: $ADMIN_PASSWORD)
-  Swagger: $url/swagger-ui.html
+  Swagger: $swagger
 
 Senhas guardadas em $(pwd)/.env
 Logs:      sudo docker compose -f $(pwd)/docker-compose.yml logs -f

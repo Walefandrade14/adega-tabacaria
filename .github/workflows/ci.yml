@@ -153,7 +153,8 @@ jobs:
           curl -fsS http://localhost/ | grep -q "<app-root"
           curl -fsS http://localhost/rota-inexistente | grep -q "<app-root"
           curl -fsS http://localhost/api/produtos | python3 -c "import json, sys; assert len(json.load(sys.stdin)) > 0"
-          curl -fsSL -o /dev/null http://localhost/swagger-ui.html
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/v3/api-docs)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/swagger-ui.html)" = 404
           curl -fsSI http://localhost/ | grep -qi "x-content-type-options"
       - name: E2E contra a stack da VM
         run: |
