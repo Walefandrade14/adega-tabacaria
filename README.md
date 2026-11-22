@@ -102,7 +102,7 @@ O gateway de pagamento é simulado (`simularRecusa: true` força recusa no cart�
 | O quê | Como funciona |
 |---|---|
 | Confirmação do Pix | Com `PAGAMENTO_SIMULADO=true` (padrão local e no CI) o cliente pode simular o "Já paguei". Com `false` (padrão na VM) só a loja confirma, pelo painel ou `POST /api/admin/pagamentos/{id}/confirmar-pix`, e o `simularRecusa` é ignorado. Num gateway real quem confirma é o webhook do banco |
-| Tentativas de login | 5 senhas erradas seguidas na mesma conta travam o login por 15 min (resposta 429 com `Retry-After`). Acertar zera a contagem. Ajuste com `LOGIN_MAX_TENTATIVAS` e `LOGIN_BLOQUEIO_MINUTOS` |
+| Tentativas de login | 5 senhas erradas seguidas na mesma conta travam o login por 15 min (resposta 429 com `Retry-After`). Acertar zera a contagem. O bloqueio fica na tabela `tentativa_login` (migration V7), então vale mesmo depois de a API reiniciar. Ajuste com `LOGIN_MAX_TENTATIVAS` e `LOGIN_BLOQUEIO_MINUTOS` |
 | Sessão | Todo request confere o token no banco: funcionário desativado ou com cargo trocado perde o acesso na hora, e trocar a senha derruba os tokens antigos do cliente |
 | Pedido sem pagamento | A cada minuto uma rotina cancela pedidos ABERTO ou aguardando Pix há mais de `minutos_expiracao_pedido` (configuração, padrão 30; 0 desliga). O estoque reservado pelo Pix volta para a prateleira |
 | Endereço já usado | Editar ou remover um endereço que está num pedido guarda o antigo no histórico (o pedido continua mostrando o endereço da época) |
