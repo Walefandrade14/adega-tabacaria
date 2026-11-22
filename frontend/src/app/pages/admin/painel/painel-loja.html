@@ -1,0 +1,140 @@
+@if (erro()) {
+  <p class="alerta erro" role="alert">
+    <i class="bi bi-exclamation-octagon"></i>
+    <span>{{ erro() }} <button type="button" class="btn-link" (click)="carregar()">Tentar de novo</button></span>
+  </p>
+}
+
+@if (carregando()) {
+  <div class="cartao carregando">Carregando configurações da loja…</div>
+} @else {
+  <div class="blocos-loja">
+    <form class="cartao bloco horarios" [formGroup]="formHorarios" (ngSubmit)="salvarHorarios()">
+      <div class="cabecalho">
+        <h2 class="cartao-titulo">Horário de funcionamento</h2>
+        <p class="sub">Fechamento antes da abertura passa da meia-noite. Abertura igual ao fechamento deixa a loja aberta 24 horas.</p>
+      </div>
+      @if (erroHorarios()) {
+        <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erroHorarios() }}</p>
+      }
+      <div class="tabela-wrap">
+        <table class="grade" formArrayName="dias">
+          <thead>
+            <tr>
+              <th>Dia</th>
+              <th>Abre</th>
+              <th>Fecha</th>
+              <th>Delivery</th>
+              <th><span class="sr-only">Situação</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (grupo of linhas.controls; track $index; let i = $index) {
+              <tr [formGroupName]="i" [attr.data-dia]="dias()[i].diaSemana">
+                <td class="dia">{{ dias()[i].nomeDia }}</td>
+                <td><input type="time" formControlName="abre" [attr.aria-label]="'Abertura de ' + dias()[i].nomeDia" /></td>
+                <td><input type="time" formControlName="fecha" [attr.aria-label]="'Fechamento de ' + dias()[i].nomeDia" /></td>
+                <td>
+                  <label class="check">
+                    <input type="checkbox" formControlName="delivery" />
+                    <span class="sr-only">Delivery em {{ dias()[i].nomeDia }}</span>
+                  </label>
+                </td>
+                <td class="situacao">{{ situacao(i) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="rodape">
+        <button type="submit" class="btn btn-primary" [disabled]="salvandoHorarios() || linhas.pristine">
+          {{ salvandoHorarios() ? 'Salvando…' : 'Salvar horários' }}
+        </button>
+      </div>
+    </form>
+
+    <div class="cartao bloco taxas">
+      <div class="cabecalho">
+        <h2 class="cartao-titulo">Taxas de entrega</h2>
+        <p class="sub">A loja só entrega nos bairros desta lista (RN09). O prefixo do CEP é opcional e vale para bairros com outro nome.</p>
+      </div>
+      <form class="nova-taxa" [formGroup]="formNovaTaxa" (ngSubmit)="criarTaxa()" novalidate>
+        <label class="campo bairro">
+          <span>Bairro</span>
+          <input type="text" formControlName="bairro" placeholder="Ex.: Santo Amaro" [class.erro]="taxaInvalida(formNovaTaxa, 'bairro')" />
+        </label>
+        <label class="campo cep">
+          <span>Prefixo do CEP</span>
+          <input type="text" inputmode="numeric" formControlName="cepPrefixo" placeholder="04710" maxlength="5" [class.erro]="taxaInvalida(formNovaTaxa, 'cepPrefixo')" />
+        </label>
+        <label class="campo valor">
+          <span>Taxa (R$)</span>
+          <input type="text" inputmode="decimal" formControlName="valor" placeholder="8,00" [class.erro]="taxaInvalida(formNovaTaxa, 'valor')" />
+        </label>
+        <button type="submit" class="btn btn-primary" [disabled]="salvandoTaxa()"><i class="bi bi-plus-lg"></i> Adicionar bairro</button>
+      </form>
+      @if (erroTaxas()) {
+        <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erroTaxas() }}</p>
+      }
+      <ul class="lista-taxas">
+        @for (t of taxas(); track t.id) {
+          <li>
+            @if (editandoTaxa() === t.id) {
+              <form class="edicao-taxa" [formGroup]="formEdicaoTaxa" (ngSubmit)="salvarTaxa(t)">
+                <input type="text" formControlName="bairro" aria-label="Bairro" [class.erro]="taxaInvalida(formEdicaoTaxa, 'bairro')" />
+                <input type="text" inputmode="numeric" formControlName="cepPrefixo" maxlength="5" aria-label="Prefixo do CEP" placeholder="CEP" [class.erro]="taxaInvalida(formEdicaoTaxa, 'cepPrefixo')" />
+                <input type="text" inputmode="decimal" formControlName="valor" aria-label="Taxa" [class.erro]="taxaInvalida(formEdicaoTaxa, 'valor')" />
+                <button type="submit" class="btn btn-primary btn-sm" [disabled]="salvandoTaxa()">Salvar</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editandoTaxa.set(null)">Cancelar</button>
+              </form>
+            } @else {
+              <div class="nome-taxa">
+                <strong>{{ t.bairro }}</strong>
+                <span>{{ t.valor | currency: 'BRL' }}@if (t.cepPrefixo) { · CEP {{ t.cepPrefixo }}… }</span>
+              </div>
+              <div class="acoes">
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editarTaxa(t)"><i class="bi bi-pencil"></i> Editar</button>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [class.btn-ghost]="confirmarRemocao() !== t.id"
+                  [class.btn-perigo]="confirmarRemocao() === t.id"
+                  [disabled]="salvandoTaxa()"
+                  (click)="removerTaxa(t)">
+                  <i class="bi bi-trash3"></i> {{ confirmarRemocao() === t.id ? 'Confirmar remoção' : 'Remover' }}
+                </button>
+              </div>
+            }
+          </li>
+        } @empty {
+          <li class="vazio">Nenhum bairro cadastrado: o delivery fica indisponível.</li>
+        }
+      </ul>
+    </div>
+
+    @if (ajustes().length) {
+      <form class="cartao bloco ajustes" [formGroup]="formAjustes" (ngSubmit)="salvarAjustes()">
+        <div class="cabecalho">
+          <h2 class="cartao-titulo">Ajustes de venda</h2>
+        </div>
+        @if (erroAjustes()) {
+          <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erroAjustes() }}</p>
+        }
+        <div class="form-grid">
+          @for (a of ajustes(); track a.chave) {
+            <label class="campo">
+              <span>{{ a.rotulo }}</span>
+              <input type="text" inputmode="decimal" [formControlName]="a.chave" />
+              <small class="dica">{{ a.dica }}</small>
+            </label>
+          }
+        </div>
+        <div class="rodape">
+          <button type="submit" class="btn btn-primary" [disabled]="salvandoAjustes() || formAjustes.pristine">
+            {{ salvandoAjustes() ? 'Salvando…' : 'Salvar ajustes' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+}

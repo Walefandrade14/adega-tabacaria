@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Categoria } from '../models/categoria';
+import { Configuracao, Funcionario, FuncionarioCadastro, Horario, TaxaEntrega, TaxaEntregaCadastro } from '../models/loja';
 import { Produto, ProdutoCadastro } from '../models/produto';
 import { Relatorio } from '../models/relatorio';
 
@@ -49,6 +50,54 @@ export class AdminService {
 
   removerCategoria(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/categorias/${id}`);
+  }
+
+  funcionarios(): Observable<Funcionario[]> {
+    return this.http.get<Funcionario[]>(`${this.api}/funcionarios`);
+  }
+
+  criarFuncionario(funcionario: FuncionarioCadastro): Observable<Funcionario> {
+    return this.http.post<Funcionario>(`${this.api}/funcionarios`, funcionario);
+  }
+
+  alterarAtivoFuncionario(id: number, ativo: boolean): Observable<Funcionario> {
+    return this.http.patch<Funcionario>(`${this.api}/funcionarios/${id}/ativo`, null, { params: { ativo } });
+  }
+
+  alterarSenhaFuncionario(id: number, senha: string): Observable<Funcionario> {
+    return this.http.patch<Funcionario>(`${this.api}/funcionarios/${id}/senha`, { senha });
+  }
+
+  horarios(): Observable<Horario[]> {
+    return this.http.get<Horario[]>(`${this.api}/horarios`);
+  }
+
+  atualizarHorario(diaSemana: number, horaAbertura: string, horaFechamento: string, aceitaDelivery: boolean): Observable<Horario> {
+    return this.http.put<Horario>(`${this.api}/horarios/${diaSemana}`, { horaAbertura, horaFechamento, aceitaDelivery });
+  }
+
+  taxasEntrega(): Observable<TaxaEntrega[]> {
+    return this.http.get<TaxaEntrega[]>(`${this.api}/taxas-entrega`);
+  }
+
+  criarTaxaEntrega(taxa: TaxaEntregaCadastro): Observable<TaxaEntrega> {
+    return this.http.post<TaxaEntrega>(`${this.api}/taxas-entrega`, taxa);
+  }
+
+  atualizarTaxaEntrega(id: number, taxa: TaxaEntregaCadastro): Observable<TaxaEntrega> {
+    return this.http.put<TaxaEntrega>(`${this.api}/taxas-entrega/${id}`, taxa);
+  }
+
+  removerTaxaEntrega(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/taxas-entrega/${id}`);
+  }
+
+  configuracoes(): Observable<Configuracao[]> {
+    return this.http.get<Configuracao[]>(`${this.api}/configuracoes`);
+  }
+
+  atualizarConfiguracao(chave: string, valor: string): Observable<Configuracao> {
+    return this.http.put<Configuracao>(`${this.api}/configuracoes/${chave}`, { valor });
   }
 }
 

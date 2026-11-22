@@ -1,0 +1,82 @@
+.equipe {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px;
+}
+
+.novo-funcionario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.enviar {
+  display: flex;
+  align-items: flex-end;
+}
+
+.carregando {
+  color: var(--muted);
+  text-align: center;
+}
+
+.lista-equipe {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-equipe li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(201, 161, 94, 0.12);
+}
+
+.lista-equipe li.inativo .quem {
+  opacity: 0.55;
+}
+
+.quem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quem > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dica {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.acoes,
+.senha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.senha input {
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  background: var(--bg-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .equipe .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

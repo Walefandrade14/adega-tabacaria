@@ -14,13 +14,15 @@ import { Relatorio } from '../../../core/models/relatorio';
 import { Produto } from '../../../core/models/produto';
 import { AdminService, paraCadastro } from '../../../core/services/admin.service';
 import { PedidoService } from '../../../core/services/pedido.service';
+import { PainelEquipe } from './painel-equipe';
+import { PainelLoja } from './painel-loja';
 import { ProdutoFormulario } from './produto-formulario';
 
 
 
 
 type FiltroPedidos = 'andamento' | 'todos' | StatusPedido;
-type Aba = 'produtos' | 'categorias' | 'pedidos' | 'resumo';
+type Aba = 'produtos' | 'categorias' | 'pedidos' | 'resumo' | 'equipe' | 'loja';
 
 const FINALIZADOS: StatusPedido[] = ['CONCLUIDO', 'CANCELADO'];
 const EM_ANDAMENTO: StatusPedido[] = ['ABERTO', 'AGUARDANDO_PAGAMENTO', 'PAGO', 'EM_SEPARACAO', 'EM_ENTREGA'];
@@ -48,7 +50,7 @@ const CARGOS: Record<Perfil, string> = {
 
 @Component({
   selector: 'app-painel',
-  imports: [CurrencyPipe, DatePipe, ReactiveFormsModule, ProdutoFormulario],
+  imports: [CurrencyPipe, DatePipe, ReactiveFormsModule, ProdutoFormulario, PainelEquipe, PainelLoja],
   templateUrl: './painel.html',
   styleUrl: './painel.css'
 })
@@ -468,7 +470,7 @@ export class Painel {
     });
   }
 
-  private mostrarAviso(mensagem: string): void {
+  mostrarAviso(mensagem: string): void {
     this.aviso.set(mensagem);
     clearTimeout(this.timerAviso);
     this.timerAviso = setTimeout(() => this.aviso.set(null), 3500);

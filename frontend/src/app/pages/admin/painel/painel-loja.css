@@ -1,0 +1,166 @@
+.blocos-loja {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.carregando {
+  padding: 20px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tabela-wrap {
+  overflow-x: auto;
+}
+
+.grade {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+.grade th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gold-line);
+  font-family: var(--font-caps);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.grade td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(201, 161, 94, 0.12);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.grade .dia {
+  text-transform: capitalize;
+}
+
+.grade input[type='time'],
+.edicao-taxa input {
+  padding: 8px 10px;
+  border: 1px solid var(--gold-line);
+  border-radius: 6px;
+  background: var(--bg-2);
+  color-scheme: dark;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.grade .check {
+  align-items: center;
+}
+
+.situacao {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rodape {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nova-taxa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.nova-taxa .bairro {
+  flex: 2 1 220px;
+}
+
+.nova-taxa .cep,
+.nova-taxa .valor {
+  flex: 1 1 120px;
+}
+
+.lista-taxas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-taxas li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(201, 161, 94, 0.12);
+}
+
+.lista-taxas li.vazio {
+  justify-content: center;
+  color: var(--muted);
+}
+
+.nome-taxa {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nome-taxa span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.acoes,
+.edicao-taxa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edicao-taxa {
+  flex: 1;
+}
+
+.edicao-taxa input:first-child {
+  flex: 1 1 180px;
+}
+
+.edicao-taxa input:not(:first-child) {
+  width: 110px;
+}
+
+.erro {
+  border-color: var(--red) !important;
+}
+
+@media (max-width: 640px) {
+  .ajustes .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

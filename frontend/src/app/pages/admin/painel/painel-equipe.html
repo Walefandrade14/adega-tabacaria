@@ -1,0 +1,85 @@
+<div class="cartao equipe">
+  <form class="novo-funcionario" [formGroup]="form" (ngSubmit)="criar()" novalidate>
+    <h2 class="cartao-titulo">Novo funcionário</h2>
+    <div class="form-grid">
+      <label class="campo">
+        <span>Nome</span>
+        <input type="text" formControlName="nome" autocomplete="off" [class.erro]="invalido('nome')" />
+        @if (invalido('nome')) {
+          <small>Informe o nome.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>CPF</span>
+        <input type="text" inputmode="numeric" formControlName="cpf" placeholder="000.000.000-00" maxlength="14" (input)="aoDigitarCpf()" [class.erro]="invalido('cpf')" />
+        @if (invalido('cpf')) {
+          <small>Informe um CPF válido.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Cargo</span>
+        <select formControlName="cargo">
+          @for (c of cargos; track c) {
+            <option [value]="c">{{ rotulos[c] }}</option>
+          }
+        </select>
+      </label>
+      <label class="campo">
+        <span>Usuário</span>
+        <input type="text" formControlName="usuario" autocomplete="off" [class.erro]="invalido('usuario')" />
+        @if (invalido('usuario')) {
+          <small>Informe o usuário de acesso.</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Senha inicial</span>
+        <input type="password" formControlName="senha" autocomplete="new-password" [class.erro]="invalido('senha')" />
+        @if (invalido('senha')) {
+          <small>Use pelo menos 6 caracteres.</small>
+        }
+      </label>
+      <div class="enviar">
+        <button type="submit" class="btn btn-primary" [disabled]="salvando()"><i class="bi bi-person-plus"></i> Cadastrar funcionário</button>
+      </div>
+    </div>
+  </form>
+
+  @if (erro()) {
+    <p class="alerta erro" role="alert"><i class="bi bi-exclamation-octagon"></i> {{ erro() }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="carregando">Carregando equipe…</p>
+  } @else {
+    <ul class="lista-equipe">
+      @for (f of ordenados(); track f.id) {
+        <li [class.inativo]="!f.ativo">
+          <div class="quem">
+            <strong>{{ f.nome }}</strong>
+            <span>{{ f.usuario }} · <span class="selo-mini">{{ rotulos[f.cargo] }}</span> @if (!f.ativo) { · desativado }</span>
+          </div>
+          @if (f.cargo === 'DONO') {
+            <span class="dica">A senha do dono vem do ADMIN_PASSWORD do servidor</span>
+          } @else if (trocandoSenha() === f.id) {
+            <form class="senha" [formGroup]="formSenha" (ngSubmit)="salvarSenha(f)">
+              <input type="password" formControlName="senha" placeholder="Nova senha" autocomplete="new-password" [attr.aria-label]="'Nova senha de ' + f.nome" />
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="ocupado() === f.id">Salvar senha</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="trocandoSenha.set(null)">Cancelar</button>
+            </form>
+          } @else {
+            <div class="acoes">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="abrirSenha(f)"><i class="bi bi-key"></i> Trocar senha</button>
+              <button type="button" class="btn btn-sm" [class.btn-ghost]="f.ativo" [class.btn-outline]="!f.ativo" [disabled]="ocupado() === f.id" (click)="alternarAtivo(f)">
+                @if (f.ativo) {
+                  <i class="bi bi-person-dash"></i> Desativar
+                } @else {
+                  <i class="bi bi-person-check"></i> Reativar
+                }
+              </button>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

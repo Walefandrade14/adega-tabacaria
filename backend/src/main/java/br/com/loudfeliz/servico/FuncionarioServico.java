@@ -1,5 +1,6 @@
 package br.com.loudfeliz.servico;
 
+import br.com.loudfeliz.dominio.Cargo;
 import br.com.loudfeliz.dominio.Funcionario;
 import br.com.loudfeliz.dto.FuncionarioRequest;
 import br.com.loudfeliz.dto.FuncionarioResponse;
@@ -54,12 +55,18 @@ public class FuncionarioServico {
     @Transactional
     public FuncionarioResponse alterarAtivo(Long id, boolean ativo) {
         Funcionario funcionario = funcionarios.findById(id).orElseThrow(() -> new NaoEncontradoException("Funcionário não encontrado."));
+        if (!ativo && funcionario.getCargo() == Cargo.DONO) {
+            throw new RequisicaoInvalidaException("O dono não pode ser desativado.");
+        }
         funcionario.setAtivo(ativo);
         return FuncionarioResponse.de(funcionario);
     }
     @Transactional
     public FuncionarioResponse alterarSenha(Long id, String senha) {
         Funcionario funcionario = funcionarios.findById(id).orElseThrow(() -> new NaoEncontradoException("Funcionário não encontrado."));
+        if (funcionario.getCargo() == Cargo.DONO) {
+            throw new RequisicaoInvalidaException("A senha do dono é definida pelo ADMIN_PASSWORD do servidor.");
+        }
         funcionario.setSenhaHash(encoder.encode(senha));
         return FuncionarioResponse.de(funcionario);
     }

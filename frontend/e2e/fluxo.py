@@ -37,6 +37,41 @@ def contexto(navegador, **kwargs):
     return ctx
 
 
+def entrar_como_dono(pg):
+    pg.goto(BASE + "/admin")
+    pg.wait_for_url("**/admin/entrar**")
+    pg.fill("input[formcontrolname=usuario]", "dono")
+    pg.fill("input[formcontrolname=senha]", SENHA_DONO)
+    pg.click("button[type=submit]")
+    pg.wait_for_url(BASE + "/admin")
+
+
+def abrir_loja(navegador, erros):
+    pg = contexto(navegador).new_page()
+    pg.on("pageerror", lambda e: erros.append(str(e)))
+    entrar_como_dono(pg)
+    pg.get_by_role("tab", name="Loja").click()
+    linhas = pg.locator("tr[data-dia]")
+    expect(linhas).to_have_count(7)
+    for i in range(7):
+        linhas.nth(i).locator("input[formcontrolname=abre]").fill("00:00")
+        linhas.nth(i).locator("input[formcontrolname=fecha]").fill("00:00")
+    expect(linhas.first.locator(".situacao")).to_have_text("Aberto 24 horas")
+    pg.get_by_role("button", name="Salvar horários").click()
+    expect(pg.locator(".toast")).to_contain_text("horários salvos")
+
+    bairro = f"Bairro E2E {uuid.uuid4().hex[:6]}"
+    pg.fill("form.nova-taxa input[formcontrolname=bairro]", bairro)
+    pg.fill("form.nova-taxa input[formcontrolname=valor]", "9,50")
+    pg.get_by_role("button", name="Adicionar bairro").click()
+    taxa = pg.locator(".lista-taxas li", has_text=bairro)
+    expect(taxa).to_contain_text("9,50")
+    taxa.get_by_role("button", name="Remover").click()
+    taxa.get_by_role("button", name="Confirmar remoção").click()
+    expect(taxa).to_have_count(0)
+    print("dono: loja aberta 24 h e taxa de entrega criada e removida ok")
+
+
 def cliente(navegador, erros):
     pg = contexto(navegador).new_page()
     pg.on("pageerror", lambda e: erros.append(str(e)))
@@ -153,12 +188,7 @@ def dono(navegador, erros):
     nome = f"Gin E2E {uuid.uuid4().hex[:6]}"
     categoria = f"Categoria E2E {uuid.uuid4().hex[:6]}"
 
-    pg.goto(BASE + "/admin")
-    pg.wait_for_url("**/admin/entrar**")
-    pg.fill("input[formcontrolname=usuario]", "dono")
-    pg.fill("input[formcontrolname=senha]", SENHA_DONO)
-    pg.click("button[type=submit]")
-    pg.wait_for_url(BASE + "/admin")
+    entrar_como_dono(pg)
     expect(pg.locator(".tabela tbody tr").nth(MINIMO_PRODUTOS - 1)).to_be_visible()
 
     pg.get_by_role("button", name="Novo produto").click()
@@ -210,11 +240,24 @@ def dono(navegador, erros):
     pg.get_by_role("button", name="30 dias").click()
     expect(pg.locator(".colunas .coluna")).to_have_count(30)
 
+    pg.get_by_role("tab", name="Equipe").click()
+    usuario = f"caixa{uuid.uuid4().hex[:6]}"
+    equipe = pg.locator("app-painel-equipe")
+    equipe.locator("input[formcontrolname=nome]").fill("Caixa E2E")
+    equipe.locator("input[formcontrolname=cpf]").press_sequentially(cpf_valido())
+    equipe.locator("input[formcontrolname=usuario]").fill(usuario)
+    equipe.locator("input[formcontrolname=senha]").fill("caixa123")
+    equipe.get_by_role("button", name="Cadastrar funcionário").click()
+    funcionario = equipe.locator(".lista-equipe li", has_text=usuario)
+    expect(funcionario).to_contain_text("Caixa")
+    funcionario.get_by_role("button", name="Desativar").click()
+    expect(funcionario).to_contain_text("desativado")
+
     vitrine = contexto(navegador).new_page()
     vitrine.goto(BASE + "/produtos")
     expect(vitrine.get_by_text(nome)).to_be_visible()
     expect(vitrine.get_by_text("exibindo dados de exemplo")).to_have_count(0)
-    print("dono: login, produto, estoque, edição, categoria, pedidos, resumo e vitrine ok")
+    print("dono: login, produto, estoque, edição, categoria, pedidos, resumo, equipe e vitrine ok")
 
 
 def cadastro_sem_cpf(navegador, erros):
@@ -272,6 +315,7 @@ def main():
     with sync_playwright() as pw:
         navegador = pw.chromium.launch()
         try:
+            abrir_loja(navegador, erros)
             cliente(navegador, erros)
             dono(navegador, erros)
             cadastro_sem_cpf(navegador, erros)

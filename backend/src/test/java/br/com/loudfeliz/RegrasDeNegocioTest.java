@@ -372,6 +372,26 @@ class RegrasDeNegocioTest {
     }
 
     @Test
+    void donoTrocaASenhaDoFuncionarioENaoSeDesativa() throws Exception {
+        String usuario = "entregador" + ThreadLocalRandom.current().nextInt(1_000_000);
+        long funcionario = id(chamar(post("/api/admin/funcionarios"), dono, """
+                {"nome":"Entregador Teste","cpf":"%s","cargo":"ENTREGADOR","usuario":"%s","senha":"entrega123"}"""
+                .formatted(cpfValido(), usuario), 201));
+        chamar(patch("/api/admin/funcionarios/" + funcionario + "/senha"), dono, """
+                {"senha":"nova12345"}""", 200);
+        chamar(post("/api/auth/funcionarios/login"), null, """
+                {"usuario":"%s","senha":"entrega123"}""".formatted(usuario), 401);
+        chamar(post("/api/auth/funcionarios/login"), null, """
+                {"usuario":"%s","senha":"nova12345"}""".formatted(usuario), 200);
+
+        List<Integer> donos = JsonPath.read(chamar(get("/api/admin/funcionarios"), dono, null, 200), "$[?(@.cargo == 'DONO')].id");
+        long idDono = donos.get(0);
+        chamar(patch("/api/admin/funcionarios/" + idDono + "/ativo?ativo=false"), dono, null, 400);
+        chamar(patch("/api/admin/funcionarios/" + idDono + "/senha"), dono, """
+                {"senha":"outra12345"}""", 400);
+    }
+
+    @Test
     void clienteEditaDadosTrocaSenhaEEndereco() throws Exception {
         String email = "conta-" + UUID.randomUUID() + "@teste.com";
         String antigo = JsonPath.read(chamar(post("/api/auth/cadastro"), null, """

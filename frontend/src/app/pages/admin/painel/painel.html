@@ -47,6 +47,12 @@
       <button type="button" role="tab" [class.ativa]="aba() === 'resumo'" [attr.aria-selected]="aba() === 'resumo'" (click)="abrirResumo()">
         <i class="bi bi-graph-up"></i> Resumo
       </button>
+      <button type="button" role="tab" [class.ativa]="aba() === 'equipe'" [attr.aria-selected]="aba() === 'equipe'" (click)="aba.set('equipe')">
+        <i class="bi bi-people"></i> Equipe
+      </button>
+      <button type="button" role="tab" [class.ativa]="aba() === 'loja'" [attr.aria-selected]="aba() === 'loja'" (click)="aba.set('loja')">
+        <i class="bi bi-shop"></i> Loja
+      </button>
     }
   </div>
 
@@ -299,6 +305,10 @@
         }
       }
     </div>
+  } @else if (aba() === 'equipe') {
+    <app-painel-equipe (aviso)="mostrarAviso($event)" />
+  } @else if (aba() === 'loja') {
+    <app-painel-loja (aviso)="mostrarAviso($event)" />
   } @else {
     <div class="cartao resumo">
       <div class="ferramentas">

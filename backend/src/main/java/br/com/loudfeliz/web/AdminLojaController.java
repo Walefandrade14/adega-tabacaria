@@ -8,6 +8,7 @@ import br.com.loudfeliz.dto.FuncionarioRequest;
 import br.com.loudfeliz.dto.FuncionarioResponse;
 import br.com.loudfeliz.dto.HorarioRequest;
 import br.com.loudfeliz.dto.HorarioResponse;
+import br.com.loudfeliz.dto.NovaSenhaRequest;
 import br.com.loudfeliz.dto.TaxaEntregaRequest;
 import br.com.loudfeliz.dto.TaxaEntregaResponse;
 import br.com.loudfeliz.servico.CadastroServico;
@@ -135,5 +136,11 @@ public class AdminLojaController {
     @PatchMapping("/funcionarios/{id}/ativo")
     public FuncionarioResponse alterarAtivo(@PathVariable Long id, @RequestParam boolean ativo) {
         return funcionarios.alterarAtivo(id, ativo);
+    }
+
+    @Operation(summary = "Define uma nova senha para o funcionário. A senha do dono vem do ADMIN_PASSWORD")
+    @PatchMapping("/funcionarios/{id}/senha")
+    public FuncionarioResponse alterarSenha(@PathVariable Long id, @Valid @RequestBody NovaSenhaRequest requisicao) {
+        return funcionarios.alterarSenha(id, requisicao.senha());
     }
 }
