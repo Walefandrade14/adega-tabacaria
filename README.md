@@ -54,7 +54,7 @@ Telas do site:
 | `/pedidos` | Cliente | Meus pedidos com o status de cada um |
 | `/pedidos/:id` | Cliente | Andamento, pagamento (cartão, Pix com código copia e cola, dinheiro) e cancelamento |
 | `/admin/entrar` | Funcionário | Login da equipe (link "Área do funcionário" no rodapé) |
-| `/admin` | Dono / estoque | Cadastro de produtos, ajuste rápido de estoque, ativar/desativar, categorias, pedidos paginados (confirmar Pix, avançar status, cancelar com estorno) e, para o Dono, o Resumo de vendas |
+| `/admin` | Dono / estoque | Cadastro de produtos, ajuste rápido de estoque, ativar/desativar, categorias, pedidos paginados (confirmar Pix, avançar status, cancelar com estorno) e, para o Dono, o Resumo de vendas, a aba Equipe (cadastrar funcionário, trocar senha, desativar) e a aba Loja (horário de funcionamento, bairros e taxas de entrega, pedido mínimo, limite de oferta, expiração do pedido e alerta de estoque) |
 
 Fluxo de compra: o botão **Adicionar** do card põe o produto no carrinho (guardado no navegador). No carrinho o cliente escolhe entrega ou retirada, a API simula o pedido a cada mudança e o botão só libera quando nenhuma regra bloqueia. Depois de criar o pedido ele paga na tela do pedido; no Pix, "Já paguei" simula a confirmação do banco. No painel, a aba **Pedidos** leva o pedido de Pago → Em separação → Saiu para entrega (ou direto para Concluído na retirada) → Concluído.
 
