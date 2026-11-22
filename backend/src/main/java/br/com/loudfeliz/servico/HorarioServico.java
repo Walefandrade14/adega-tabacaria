@@ -34,6 +34,11 @@ public class HorarioServico {
     }
 
     @Transactional(readOnly = true)
+    public boolean lojaAberta(LocalDateTime momento) {
+        return dentroDoHorario(momento, horarios.findAll(), false);
+    }
+
+    @Transactional(readOnly = true)
     public LojaStatusResponse status() {
         LocalDateTime agora = Fuso.agora();
         List<HorarioFuncionamento> lista = horarios.findAllByOrderByDiaSemanaAsc();

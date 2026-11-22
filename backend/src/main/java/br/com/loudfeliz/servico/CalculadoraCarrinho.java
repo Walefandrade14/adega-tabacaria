@@ -117,6 +117,10 @@ public class CalculadoraCarrinho {
             }
         }
 
+        if (tipo == TipoEntrega.RETIRADA && !horarios.lojaAberta(Fuso.agora())) {
+            calculo.adicionarProblema("RN04", "A loja está fechada agora. A retirada só pode ser pedida no horário de funcionamento.");
+        }
+
         BigDecimal taxa = BigDecimal.ZERO;
         if (tipo == TipoEntrega.DELIVERY) {
             if (!horarios.deliveryDisponivel(Fuso.agora())) {

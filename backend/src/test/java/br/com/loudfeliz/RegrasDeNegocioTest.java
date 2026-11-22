@@ -188,6 +188,20 @@ class RegrasDeNegocioTest {
     }
 
     @Test
+    void rn04RetiradaBloqueadaComALojaFechada() throws Exception {
+        long produto = novoProduto("50.00", 10, false, false, null);
+        Cliente cliente = novoCliente(LocalDate.of(1990, 1, 1), "Centro");
+        lojaFechadaAgora();
+        String erro = chamar(post("/api/pedidos"), cliente.token(), carrinho("RETIRADA", null, item(produto, 1)), 422);
+        assertEquals("RN04", JsonPath.read(erro, "$.regra"));
+        Boolean aberta = JsonPath.read(chamar(get("/api/loja/status"), null, null, 200), "$.lojaAberta");
+        assertFalse(aberta);
+        deliveryVinteEQuatroHoras(true);
+        long pedido = id(chamar(post("/api/pedidos"), cliente.token(), carrinho("RETIRADA", null, item(produto, 1)), 201));
+        assertTrue(pedido > 0);
+    }
+
+    @Test
     void rn05TaxaDeEntregaNaoContaParaOMinimo() throws Exception {
         long produto = novoProduto("32.00", 10, false, false, null);
         Cliente cliente = novoCliente(LocalDate.of(1990, 1, 1), "Centro");
@@ -595,6 +609,16 @@ class RegrasDeNegocioTest {
             h.setHoraAbertura(LocalTime.MIDNIGHT);
             h.setHoraFechamento(LocalTime.MIDNIGHT);
             h.setAceitaDelivery(aceita);
+            horarios.save(h);
+        });
+    }
+
+    private void lojaFechadaAgora() {
+        LocalTime abre = Fuso.agora().toLocalTime().plusHours(1).withSecond(0).withNano(0);
+        horarios.findAll().forEach(h -> {
+            h.setHoraAbertura(abre);
+            h.setHoraFechamento(abre.plusHours(1));
+            h.setAceitaDelivery(true);
             horarios.save(h);
         });
     }
