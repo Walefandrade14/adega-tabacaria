@@ -38,6 +38,7 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -76,7 +77,8 @@ public class SegurancaConfig {
         RequestMatcher precisaCsrf = req -> !METODOS_SEGUROS.contains(req.getMethod())
                 && req.getHeader(HttpHeaders.AUTHORIZATION) == null
                 && cookies.ler(req) != null;
-        http.csrf(c -> c.csrfTokenRepository(repositorioCsrf).csrfTokenRequestHandler(tratadorCsrf).requireCsrfProtectionMatcher(precisaCsrf))
+        http.csrf(c -> c.csrfTokenRepository(repositorioCsrf).csrfTokenRequestHandler(tratadorCsrf).requireCsrfProtectionMatcher(precisaCsrf)
+                        .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy()))
                 .addFilterAfter(new CookieParaBearer(cookies), CsrfFilter.class)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

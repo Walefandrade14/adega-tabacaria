@@ -407,7 +407,8 @@ class RegrasDeNegocioTest {
         assertNotNull(xsrf);
         assertFalse(xsrf.isHttpOnly());
 
-        mvc.perform(get("/api/admin/produtos").cookie(sessao)).andExpect(status().isOk());
+        MvcResult lista = mvc.perform(get("/api/admin/produtos").cookie(sessao, xsrf)).andExpect(status().isOk()).andReturn();
+        assertNull(lista.getResponse().getCookie("XSRF-TOKEN"));
         String atual = mvc.perform(get("/api/sessao").cookie(sessao)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         assertEquals("DONO", JsonPath.read(atual, "$.perfil"));
