@@ -22,6 +22,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -102,6 +103,11 @@ public class TratadorDeErros {
                 ? "Sessão expirada ou inválida. Entre de novo."
                 : "Faça login para acessar este recurso.";
         return problema(HttpStatus.UNAUTHORIZED, "Não autorizado", detalhe);
+    }
+
+    @ExceptionHandler(CsrfException.class)
+    public ProblemDetail csrf(CsrfException e) {
+        return problema(HttpStatus.FORBIDDEN, "Acesso negado", "A proteção da sessão expirou. Recarregue a página e tente de novo.");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

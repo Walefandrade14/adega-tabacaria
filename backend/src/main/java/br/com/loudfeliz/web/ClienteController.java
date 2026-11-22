@@ -1,5 +1,6 @@
 package br.com.loudfeliz.web;
 
+import br.com.loudfeliz.config.CookieDeSessao;
 import br.com.loudfeliz.dto.CalculoResponse;
 import br.com.loudfeliz.dto.CarrinhoRequest;
 import br.com.loudfeliz.dto.ClienteResponse;
@@ -17,6 +18,8 @@ import br.com.loudfeliz.servico.PedidoServico;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -41,11 +44,13 @@ public class ClienteController {
     private final ClienteServico clientes;
     private final PedidoServico pedidos;
     private final PagamentoServico pagamentos;
+    private final CookieDeSessao cookies;
 
-    public ClienteController(ClienteServico clientes, PedidoServico pedidos, PagamentoServico pagamentos) {
+    public ClienteController(ClienteServico clientes, PedidoServico pedidos, PagamentoServico pagamentos, CookieDeSessao cookies) {
         this.clientes = clientes;
         this.pedidos = pedidos;
         this.pagamentos = pagamentos;
+        this.cookies = cookies;
     }
 
     @GetMapping("/clientes/me")
@@ -61,8 +66,11 @@ public class ClienteController {
 
     @Operation(summary = "Troca a senha e devolve um token novo; os tokens antigos deixam de valer")
     @PutMapping("/clientes/me/senha")
-    public TokenResponse alterarSenha(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody SenhaRequest requisicao) {
-        return clientes.alterarSenha(Usuario.id(jwt), requisicao);
+    public TokenResponse alterarSenha(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody SenhaRequest requisicao,
+            HttpServletRequest http, HttpServletResponse resposta) {
+        TokenResponse token = clientes.alterarSenha(Usuario.id(jwt), requisicao);
+        cookies.gravar(http, resposta, token);
+        return token;
     }
 
     @GetMapping("/clientes/me/enderecos")

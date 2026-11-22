@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
@@ -16,11 +17,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,6 +38,10 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -46,12 +51,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SegurancaConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SegurancaConfig.class);
+    private static final Set<String> METODOS_SEGUROS = Set.of("GET", "HEAD", "OPTIONS", "TRACE");
     private static final String SEGREDO_ANTIGO = "troque-este-segredo-em-producao-loud-feliz-no-simples";
 
     @Bean
-    public SecurityFilterChain filtroDeSeguranca(HttpSecurity http, ValidadorDeSessao validador,
+    public SecurityFilterChain filtroDeSeguranca(HttpSecurity http, ValidadorDeSessao validador, CookieDeSessao cookies,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolvedor) throws Exception {
         AuthenticationEntryPoint naoAutenticado = (req, res, erro) -> {
+            if (Boolean.TRUE.equals(req.getAttribute(CookieParaBearer.ATRIBUTO))) {
+                cookies.apagar(req, res);
+            }
             new BearerTokenAuthenticationEntryPoint().commence(req, res, erro);
             resolvedor.resolveException(req, res, null, erro);
         };
@@ -60,7 +69,15 @@ public class SegurancaConfig {
             resolvedor.resolveException(req, res, null, erro);
         };
         Converter<Jwt, AbstractAuthenticationToken> conversor = conversorDeSessao(validador);
-        http.csrf(AbstractHttpConfigurer::disable)
+        CookieCsrfTokenRepository repositorioCsrf = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repositorioCsrf.setCookieCustomizer(c -> c.sameSite("Lax"));
+        CsrfTokenRequestAttributeHandler tratadorCsrf = new CsrfTokenRequestAttributeHandler();
+        tratadorCsrf.setCsrfRequestAttributeName(null);
+        RequestMatcher precisaCsrf = req -> !METODOS_SEGUROS.contains(req.getMethod())
+                && req.getHeader(HttpHeaders.AUTHORIZATION) == null
+                && cookies.ler(req) != null;
+        http.csrf(c -> c.csrfTokenRepository(repositorioCsrf).csrfTokenRequestHandler(tratadorCsrf).requireCsrfProtectionMatcher(precisaCsrf))
+                .addFilterAfter(new CookieParaBearer(cookies), CsrfFilter.class)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
@@ -135,6 +152,7 @@ public class SegurancaConfig {
         cors.setAllowedOriginPatterns(Arrays.stream(origens.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
+        cors.setAllowCredentials(true);
         cors.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
         fonte.registerCorsConfiguration("/**", cors);

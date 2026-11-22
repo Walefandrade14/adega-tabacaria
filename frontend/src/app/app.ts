@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter, take } from 'rxjs';
+import { AuthService } from './core/auth/auth.service';
 import { AvisoGlobal } from './shared/aviso-global/aviso-global';
 import { Footer } from './shared/footer/footer';
 import { Header } from './shared/header/header';
@@ -26,4 +28,14 @@ import { Header } from './shared/header/header';
     }
   `
 })
-export class App {}
+export class App {
+  constructor() {
+    const auth = inject(AuthService);
+    inject(Router)
+      .events.pipe(
+        filter(evento => evento instanceof NavigationEnd),
+        take(1)
+      )
+      .subscribe(() => auth.verificar());
+  }
+}

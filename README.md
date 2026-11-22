@@ -75,7 +75,7 @@ cd backend
 
 Público: `GET /api/produtos`, `GET /api/produtos/{id}`, `GET /api/categorias`, `GET /api/combos`, `GET /api/loja/status`, `GET /api/entrega/regioes`, `GET /api/entrega/taxa?bairro=`.
 
-Autenticação: `POST /api/auth/cadastro`, `POST /api/auth/login`, `POST /api/auth/funcionarios/login` — devolvem um token JWT para usar em `Authorization: Bearer <token>`.
+Autenticação: `POST /api/auth/cadastro`, `POST /api/auth/login`, `POST /api/auth/funcionarios/login` — gravam a sessão num cookie `HttpOnly` (o que o site usa) e devolvem o mesmo JWT no corpo, para usar em `Authorization: Bearer <token>` no Postman, Thunder Client ou Swagger. `GET /api/sessao` confere a sessão atual e `POST /api/auth/sair` apaga o cookie.
 
 Cliente: `PUT /api/clientes/me` (nome e telefone), `PUT /api/clientes/me/senha`, endereços em `/api/clientes/me/enderecos` (GET, POST, PUT `/{id}`, DELETE `/{id}`), `POST /api/carrinho/simular`, `POST /api/pedidos`, `POST /api/pedidos/{id}/pagamentos`, `POST /api/pagamentos/{id}/confirmar-pix`, `POST /api/pedidos/{id}/cancelar`.
 
@@ -103,7 +103,8 @@ O gateway de pagamento é simulado (`simularRecusa: true` força recusa no cart�
 |---|---|
 | Confirmação do Pix | Com `PAGAMENTO_SIMULADO=true` (padrão local e no CI) o cliente pode simular o "Já paguei". Com `false` (padrão na VM) só a loja confirma, pelo painel ou `POST /api/admin/pagamentos/{id}/confirmar-pix`, e o `simularRecusa` é ignorado. Num gateway real quem confirma é o webhook do banco |
 | Tentativas de login | 5 senhas erradas seguidas na mesma conta travam o login por 15 min (resposta 429 com `Retry-After`). Acertar zera a contagem. O bloqueio fica na tabela `tentativa_login` (migration V7), então vale mesmo depois de a API reiniciar. Ajuste com `LOGIN_MAX_TENTATIVAS` e `LOGIN_BLOQUEIO_MINUTOS` |
-| Sessão | Todo request confere o token no banco: funcionário desativado ou com cargo trocado perde o acesso na hora, e trocar a senha derruba os tokens antigos do cliente |
+| Sessão | O site não guarda o token: ele fica no cookie `loudfeliz_token` (`HttpOnly`, `SameSite=Lax`, `Secure` no HTTPS, só em `/api`), fora do alcance de JavaScript. No `localStorage` ficam só nome, perfil e validade. Todo request confere o token no banco: funcionário desativado ou com cargo trocado perde o acesso na hora, e trocar a senha derruba os tokens antigos do cliente |
+| CSRF | Requisição que muda dado (POST, PUT, PATCH, DELETE) autenticada pelo cookie precisa do cabeçalho `X-XSRF-TOKEN` com o valor do cookie `XSRF-TOKEN`; o interceptor do site envia sozinho. Quem usa `Authorization: Bearer` não precisa |
 | Pedido sem pagamento | A cada minuto uma rotina cancela pedidos ABERTO ou aguardando Pix há mais de `minutos_expiracao_pedido` (configuração, padrão 30; 0 desliga). O estoque reservado pelo Pix volta para a prateleira |
 | Endereço já usado | Editar ou remover um endereço que está num pedido guarda o antigo no histórico (o pedido continua mostrando o endereço da época) |
 | Segredo do JWT | O repositório não tem mais um segredo padrão. Sem `JWT_SECRET` (ou `app.jwt.segredo` no `local.properties`), a API gera uma chave aleatória a cada início e avisa no log: ninguém consegue forjar token, mas as sessões caem quando ela reinicia |
@@ -116,8 +117,8 @@ Toda resposta de erro da API sai em ProblemDetail (RFC 7807): `title`, `status`,
 | Status | Quando |
 |---|---|
 | 400 | Validação dos campos, JSON quebrado, parâmetro com tipo errado ou ausente, CPF inválido |
-| 401 | Sem token, token inválido/expirado ou login errado |
-| 403 | Perfil sem acesso à rota |
+| 401 | Sem sessão, token inválido/expirado ou login errado (com cookie inválido, a resposta já apaga o cookie) |
+| 403 | Perfil sem acesso à rota, ou falta do `X-XSRF-TOKEN` numa requisição feita com o cookie |
 | 404 | Registro ou rota inexistente (inclusive recurso de outro cliente) |
 | 405 / 415 | Método ou tipo de conteúdo não aceito |
 | 409 | Duplicidade (e-mail, CPF, usuário) ou registro em uso |
@@ -127,6 +128,8 @@ Toda resposta de erro da API sai em ProblemDetail (RFC 7807): `title`, `status`,
 No site, `core/erro-api.ts` transforma essas respostas em mensagem para o usuário; o interceptor encerra a sessão inválida (e manda para o login se a tela for restrita); o `ErroGlobal` mostra um aviso com "Recarregar" para qualquer erro não tratado, inclusive site desatualizado depois de um deploy; e rotas inexistentes caem na página 404.
 
 ## Deploy no Render (grátis)
+
+> Com a sessão em cookie, o site e a API precisam estar no mesmo site, como na VM (o Caddy serve os dois no mesmo domínio). No Render cada serviço ganha um domínio `onrender.com` diferente, então o login do site não funciona lá sem um proxy na frente. O deploy em uso é o da VM.
 
 Banco MySQL no [Aiven](https://aiven.io/free-mysql-database) e API + site no [Render](https://render.com), pelo `render.yaml`.
 

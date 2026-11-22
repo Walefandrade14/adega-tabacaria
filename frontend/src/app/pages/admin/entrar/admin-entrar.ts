@@ -31,7 +31,7 @@ export class AdminEntrar {
   });
 
   constructor() {
-    if (this.auth.token() && this.auth.funcionario()) {
+    if (this.auth.logado() && this.auth.funcionario()) {
       this.router.navigateByUrl('/admin');
     }
   }

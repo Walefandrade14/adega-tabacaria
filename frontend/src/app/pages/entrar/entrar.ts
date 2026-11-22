@@ -31,7 +31,7 @@ export class Entrar {
   });
 
   constructor() {
-    if (this.auth.token() && this.auth.cliente()) {
+    if (this.auth.logado() && this.auth.cliente()) {
       this.router.navigateByUrl('/minha-conta');
     }
   }

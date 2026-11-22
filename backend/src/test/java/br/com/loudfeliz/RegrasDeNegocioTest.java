@@ -2,6 +2,7 @@ package br.com.loudfeliz;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -25,6 +26,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -389,6 +392,43 @@ class RegrasDeNegocioTest {
         chamar(patch("/api/admin/funcionarios/" + idDono + "/ativo?ativo=false"), dono, null, 400);
         chamar(patch("/api/admin/funcionarios/" + idDono + "/senha"), dono, """
                 {"senha":"outra12345"}""", 400);
+    }
+
+    @Test
+    void sessaoDoSiteEmCookieHttpOnlyComCsrf() throws Exception {
+        MvcResult login = mvc.perform(post("/api/auth/funcionarios/login").contentType(MediaType.APPLICATION_JSON).content("""
+                {"usuario":"dono","senha":"admin123"}"""))
+                .andExpect(status().isOk()).andReturn();
+        Cookie sessao = login.getResponse().getCookie("loudfeliz_token");
+        Cookie xsrf = login.getResponse().getCookie("XSRF-TOKEN");
+        assertNotNull(sessao);
+        assertTrue(sessao.isHttpOnly());
+        assertEquals("/api", sessao.getPath());
+        assertNotNull(xsrf);
+        assertFalse(xsrf.isHttpOnly());
+
+        mvc.perform(get("/api/admin/produtos").cookie(sessao)).andExpect(status().isOk());
+        String atual = mvc.perform(get("/api/sessao").cookie(sessao)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertEquals("DONO", JsonPath.read(atual, "$.perfil"));
+
+        String categoria = """
+                {"nome":"Cookie %s"}""".formatted(UUID.randomUUID().toString().substring(0, 8));
+        String semCsrf = mvc.perform(post("/api/admin/categorias").cookie(sessao).contentType(MediaType.APPLICATION_JSON).content(categoria))
+                .andExpect(status().isForbidden()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertTrue(JsonPath.<String>read(semCsrf, "$.detail").contains("Recarregue a página"));
+        mvc.perform(post("/api/admin/categorias").cookie(sessao, xsrf).header("X-XSRF-TOKEN", xsrf.getValue())
+                        .contentType(MediaType.APPLICATION_JSON).content(categoria))
+                .andExpect(status().is2xxSuccessful());
+
+        MvcResult saida = mvc.perform(post("/api/auth/sair").cookie(sessao, xsrf).header("X-XSRF-TOKEN", xsrf.getValue()))
+                .andExpect(status().isNoContent()).andReturn();
+        assertEquals(0, saida.getResponse().getCookie("loudfeliz_token").getMaxAge());
+        mvc.perform(get("/api/sessao")).andExpect(status().isUnauthorized());
+
+        MvcResult vencido = mvc.perform(get("/api/produtos").cookie(new Cookie("loudfeliz_token", "token-invalido")))
+                .andExpect(status().isUnauthorized()).andReturn();
+        assertEquals(0, vencido.getResponse().getCookie("loudfeliz_token").getMaxAge());
     }
 
     @Test

@@ -1,7 +1,6 @@
 export type Perfil = 'CLIENTE' | 'DONO' | 'CAIXA' | 'ENTREGADOR' | 'ESTOQUE';
 
 export interface Sessao {
-  token: string;
   tipo: string;
   expiraEm: string;
   nome: string;

@@ -7,7 +7,7 @@ import uuid
 
 from playwright.sync_api import expect, sync_playwright
 
-BASE = os.environ.get("E2E_BASE", "http://127.0.0.1:4200")
+BASE = os.environ.get("E2E_BASE", "http://localhost:4200")
 MOCK = os.environ.get("E2E_MOCK")
 MINIMO_PRODUTOS = int(os.environ.get("E2E_MINIMO_PRODUTOS", "10"))
 SENHA_DONO = os.environ.get("E2E_SENHA_DONO", "admin123")
@@ -119,7 +119,12 @@ def cliente(navegador, erros):
     pg.wait_for_url("**/minha-conta")
     expect(pg.get_by_text(email)).to_be_visible()
     expect(pg.get_by_text("Praça da Sé, 100")).to_be_visible()
-    print("cliente: cadastro, endereço, logout e login ok")
+    guardado = pg.evaluate("localStorage.getItem('loudfeliz.sessao')") or ""
+    assert "token" not in guardado and "ey" not in guardado, guardado
+    assert "loudfeliz_token" not in pg.evaluate("document.cookie")
+    sessao = [c for c in pg.context.cookies() if c["name"] == "loudfeliz_token"]
+    assert sessao and sessao[0]["httpOnly"], sessao
+    print("cliente: cadastro, endereço, logout e login ok (sessão em cookie HttpOnly)")
 
     pg.goto(BASE + "/produtos")
     card = pg.locator("app-produto-card").filter(has=pg.get_by_role("button", name="Adicionar")).first
